@@ -22,8 +22,11 @@ if __name__ == '__main__':
     pub = rospy.Publisher(constants.STATE_TOPIC_NAME, Int32, queue_size=1)
 
     map_file = rospy.get_param('~map_file')
+    print("MAPFILE: ", map_file)
     waypoints_file = rospy.get_param('~waypoints_file')
     waypoints = read_waypoints(waypoints_file)
+
+    print("WAYPOINTS: ", waypoints)
 
     client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
     state_sub = rospy.Subscriber(constants.STATE_TOPIC_NAME, Int32, get_state)
