@@ -22,14 +22,17 @@ if __name__ == '__main__':
     time_started_rotation = rospy.Time.now()
 
     while not rospy.is_shutdown():
+        #print("start rotating")
         if state == constants.REACHED_WAYPOINT:
             time_started_rotation = rospy.Time.now()
             state_pub.publish(constants.ROTATING)
         elif state == constants.ROTATING:
             while (rospy.Time.now() - time_started_rotation).to_sec() <= 4:
+                print("inside rotation loop")
                 twist = Twist()
                 twist.angular.z = math.pi/2
-                state_pub.publish(twist)
+                cmd_vel_pub.publish(twist)
             twist.angular.z = 0
             cmd_vel_pub.publish(twist)
+            print("end rotating")
             state_pub.publish(constants.GO_TO_NEXT_WAYPOINT)

@@ -5,4 +5,5 @@
         <param name="map_file" type="string" value="$(find litter-picker)/maps/outside_lab.yaml"/>
         <param name="waypoints_file" type="string" value="$(find litter-picker)/waypoints/hello_world_waypoints.txt"/>
     </node>
+    <node name="rotation" pkg="litter-picker" type="rotation.py" output="screen"/>
 </launch>
