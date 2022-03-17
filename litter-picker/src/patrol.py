@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 import actionlib
 from utils import read_waypoints
@@ -45,5 +45,5 @@ if __name__ == '__main__':
             print("STATE:", state)
 
             # wait for the rotation to be finished
-            while (state != constants.GO_TO_NEXT_WAYPOINT):
+            while state != constants.GO_TO_NEXT_WAYPOINT and not rospy.is_shutdown():
                 continue

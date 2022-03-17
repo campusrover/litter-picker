@@ -20,6 +20,7 @@ if __name__ == '__main__':
     rospy.init_node('rotation')
     state_sub = rospy.Subscriber(constants.STATE_TOPIC_NAME, Int32, get_state)
     time_started_rotation = rospy.Time.now()
+    twist = Twist()
 
     while not rospy.is_shutdown():
         #print("start rotating")
@@ -27,9 +28,8 @@ if __name__ == '__main__':
             time_started_rotation = rospy.Time.now()
             state_pub.publish(constants.ROTATING)
         elif state == constants.ROTATING:
-            while (rospy.Time.now() - time_started_rotation).to_sec() <= 4:
+            while (rospy.Time.now() - time_started_rotation).to_sec() <= 4 and not rospy.is_shutdown():
                 print("inside rotation loop")
-                twist = Twist()
                 twist.angular.z = math.pi/2
                 cmd_vel_pub.publish(twist)
             twist.angular.z = 0
