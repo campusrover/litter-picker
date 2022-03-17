@@ -39,11 +39,12 @@ if __name__ == '__main__':
         # repeat the waypoints over and over again
         for goal in waypoints:
             print("Going for goal: ", goal)
+
             client.send_goal(goal)
             client.wait_for_result()
             pub.publish(constants.REACHED_WAYPOINT)
             print("STATE:", state)
 
             # wait for the rotation to be finished
-            while state != constants.GO_TO_NEXT_WAYPOINT and not rospy.is_shutdown():
-                continue
+            # while state != constants.GO_TO_NEXT_WAYPOINT and not rospy.is_shutdown():
+            #     continue
