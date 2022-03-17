@@ -23,7 +23,6 @@ if __name__ == '__main__':
     twist = Twist()
 
     while not rospy.is_shutdown():
-        #print("start rotating")
         if state == constants.REACHED_WAYPOINT:
             print("STATE in if", state)
             print("reached waypoint")
@@ -39,7 +38,6 @@ if __name__ == '__main__':
             print("STATE after while", state)
             twist.angular.z = 0
             cmd_vel_pub.publish(twist)
-            #cmd_vel_pub.unregister()
             print("TWIST: ", twist.angular.z)
             print("end rotating")
             

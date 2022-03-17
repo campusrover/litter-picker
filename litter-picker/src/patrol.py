@@ -2,9 +2,7 @@
 import rospy
 import actionlib
 from utils import read_waypoints
-from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-from geometry_msgs.msg import Twist
-import math
+from move_base_msgs.msg import MoveBaseAction
 import constants
 from std_msgs.msg import Int32
 
@@ -21,12 +19,8 @@ if __name__ == '__main__':
 
     pub = rospy.Publisher(constants.STATE_TOPIC_NAME, Int32, queue_size=1)
 
-    map_file = rospy.get_param('~map_file')
-    print("MAPFILE: ", map_file)
     waypoints_file = rospy.get_param('~waypoints_file')
     waypoints = read_waypoints(waypoints_file)
-
-   # print("WAYPOINTS: ", waypoints)
 
     client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
     state_sub = rospy.Subscriber(constants.STATE_TOPIC_NAME, Int32, get_state)
@@ -43,7 +37,7 @@ if __name__ == '__main__':
             client.send_goal(goal)
             client.wait_for_result()
             pub.publish(constants.REACHED_WAYPOINT)
-            print("STATE:", state)
+            #print("STATE:", state)
 
             # wait for the rotation to be finished
             # while state != constants.GO_TO_NEXT_WAYPOINT and not rospy.is_shutdown():
