@@ -1,4 +1,5 @@
 <launch>
+
     <include file="$(find litter-picker)/launch/navigation.launch" />
 
     <node name="patrol" pkg="litter-picker" type="patrol.py" output="screen">
