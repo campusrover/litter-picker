@@ -3,7 +3,6 @@
     <include file="$(find litter-picker)/launch/navigation.launch" />
 
     <node name="patrol" pkg="litter-picker" type="patrol.py" output="screen">
-        <param name="map_file" type="string" value="$(find litter-picker)/maps/outside_lab.yaml"/>
         <param name="waypoints_file" type="string" value="$(find litter-picker)/waypoints/hello_world_waypoints.txt"/>
     </node>
 
