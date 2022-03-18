@@ -20,7 +20,7 @@ def rotation_cb(msg):
 # Main program starts here
 if __name__ == '__main__':
     rospy.init_node('rotation')
-    state_pub = rospy.Subscriber(constants.STATE_TOPIC_NAME, Int32, get_state)
+    state_pub = rospy.Publisher('rotation/status', Int32, queue_size=1)
     odom_sub = rospy.Subscriber('odom', Odometry, odom_cb)
     rotation_sub = rospy.Subscriber('rotation/goal', Float32, rotation_cb)
     cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)

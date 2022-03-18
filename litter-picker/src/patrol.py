@@ -10,6 +10,8 @@ from std_msgs.msg import Int32
 def get_goal(msg):
     global goal
     goal = msg.data
+    global received_goal
+    received_goal = True
 
 
 # Main program starts here
@@ -17,28 +19,25 @@ if __name__ == '__main__':
     goal = MoveBaseGoal()
     rospy.init_node('patrol')
 
-    state_pub = rospy.Publisher(constants.STATE_TOPIC_NAME, Int32, queue_size=1)
-
-    waypoints_file = rospy.get_param('~waypoints_file')
-    waypoints = read_waypoints(waypoints_file)
+    state_pub = rospy.Publisher('navigation/status', Int32, queue_size=1)
 
     client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
-    goal_sub = rospy.Subscriber('move_base_simple/goal geometry_msgs/PoseStamped', )
+    goal_sub = rospy.Subscriber('move_base_simple/goal', PoseStamped, get_goal)
     
     # wait for action server to be ready
     client.wait_for_server()
 
     received_goal = False
-    should_navigate = False
 
     # Loop until ^c
     while not rospy.is_shutdown():
         if not received_goal:
             client.send_goal(goal)
             received_goal = True
+            should_navigate = True
             state_pub.publish(0)
         else: 
-            if client.get_state() == 'SUCCEEDED':
+            if client.get_goal_status_text() == 'SUCCEEDED':
                 state_pub.publish(1)
                 received_goal = False 
                 should_navigate = False 
