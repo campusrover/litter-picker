@@ -2,8 +2,10 @@
 
     <include file="$(find litter-picker)/launch/navigation.launch" />
 
-    <node name="patrol" pkg="litter-picker" type="patrol.py" output="screen">
+    <node name="master" pkg="litter-picker" type="master.py" output="screen">
         <param name="waypoints_file" type="string" value="$(find litter-picker)/waypoints/hello_world_waypoints.txt"/>
     </node>
 
+    <node name="patrol" pkg="litter-picker" type="patrol.py" output="screen"/>
+    <node name="rotation" pkg="litter-picker" type="rotation.py" output="screen"/>
 </launch>
