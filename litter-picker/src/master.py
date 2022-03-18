@@ -2,7 +2,7 @@
 import rospy
 from move_base_msgs.msg import MoveBaseGoal
 from std_msgs.msg import Float32
-from utils import _process_waypoint, read_waypoints
+from utils import read_waypoints
 import math
 
 # The states of the cleaner
@@ -26,6 +26,8 @@ class LitterPicker:
             self._create_status_callback("navigation")
         )
         self.next_waypoint = way_points[0]
+        self.rotation_points = [0, math.pi/2, math.pi, -math.pi/2]
+        self.next_rotation_point = 0
 
         # information about rotation
         self.rotation_goal_pub = rospy.Publisher('rotation/goal', Float32, queue_size=1)
@@ -51,12 +53,17 @@ class LitterPicker:
             self.next_waypoint = (self.next_waypoint + 1) % (len(self.waypoints))
 
     def _rotate(self):
+        next_rotation_point = self.next_rotation_point
         self.rotation_goal_pub.publish(math.pi / 4)
         self.state = WAITING_FOR_ROBOT_TO_FINISH_ROTATE
 
     def _finished_rotating(self):
         if self.status['rotation'] == 1:
-            self.state = AT_A_WAYPOINT_NEEDS_PROCESSING_IMAGE
+            self.state = AT_A_WAYPOINT
+            self.next_rotation_point = self.next_rotation_point + 1
+            if self.next_rotation_point == len(self.rotation_points):
+                self.state = AT_A_WAYPOINT_NEEDS_PROCESSING_IMAGE
+                self.next_rotation_point = 0
 
     def perform_action(self):
         if self.state == GO_TO_NEXT_WAYPOINT_STATE:
