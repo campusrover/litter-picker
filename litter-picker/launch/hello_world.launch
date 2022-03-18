@@ -1,6 +1,7 @@
 <launch>
 
     <include file="$(find litter-picker)/launch/navigation.launch" />
+    <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_empty_world.launch" />
 
     <node name="master" pkg="litter-picker" type="master.py" output="screen">
         <param name="waypoints_file" type="string" value="$(find litter-picker)/waypoints/hello_world_waypoints.txt"/>

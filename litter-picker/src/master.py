@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import rospy
 from move_base_msgs.msg import MoveBaseGoal
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32, Int32
 from utils import read_waypoints
 import math
 
@@ -22,15 +22,17 @@ class LitterPicker:
         # information about navigation
         self.nav_goal_pub = rospy.Publisher('navigation/goal', MoveBaseGoal, queue_size=1)
         self.nav_sub = rospy.Subscriber(
-            'navigation/status',
+            'navigation/status', Int32,
             self._create_status_callback("navigation")
         )
-        self.next_waypoint = way_points[0]
+        
+        self.next_waypoint_index = 0
+        self.next_waypoint = self.waypoints[self.next_waypoint_index]
 
         # information about rotation
         self.rotation_goal_pub = rospy.Publisher('rotation/goal', Float32, queue_size=1)
         self.nav_sub = rospy.Subscriber(
-            'rotation/status',
+            'rotation/status', Int32, 
             self._create_status_callback('rotation')
         )
         self.rotation_points = [0, math.pi / 2, math.pi, -math.pi / 2]
@@ -45,12 +47,17 @@ class LitterPicker:
     def _go_to_next_waypoint(self):
         next_waypoint = self.next_waypoint
         self.nav_goal_pub.publish(next_waypoint)
-        self.state = GO_TO_NEXT_WAYPOINT_STATE
+        if self.status['navigation'] == 1:
+            self.state = WAITING_FOR_ROBOT_TO_REACH_WAYPOINT
 
     def _reached_waypoint(self):
         if self.status['navigation'] == 1:
             self.state = AT_A_WAYPOINT
-            self.next_waypoint = (self.next_waypoint + 1) % (len(self.waypoints))
+            if (self.next_waypoint_index + 1 >= len(self.waypoints)):
+                self.next_waypoint_index = 0
+            else: 
+                self.next_waypoint_index = self.next_waypoint_index + 1
+            self.next_waypoint = self.waypoints[self.next_waypoint_index]
 
     def _rotate(self):
         next_rotation_point = self.next_rotation_point
@@ -71,9 +78,10 @@ class LitterPicker:
         elif self.state == WAITING_FOR_ROBOT_TO_REACH_WAYPOINT:
             self._reached_waypoint()
         elif self.state == AT_A_WAYPOINT:
-            self._rotate()
-        elif self.state == WAITING_FOR_ROBOT_TO_FINISH_ROTATE:
-            self._finished_rotating()
+            self.state = GO_TO_NEXT_WAYPOINT_STATE
+            #self._rotate()
+        # elif self.state == WAITING_FOR_ROBOT_TO_FINISH_ROTATE:
+        #     self._finished_rotating()
         elif self.state == AT_A_WAYPOINT_NEEDS_PROCESSING_IMAGE:
             self.state = GO_TO_NEXT_WAYPOINT_STATE
 

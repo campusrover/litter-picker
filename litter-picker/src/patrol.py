@@ -2,14 +2,15 @@
 import rospy
 import actionlib
 from utils import read_waypoints
-from move_base_msgs.msg import MoveBaseAction
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 import constants
 from std_msgs.msg import Int32
+from geometry_msgs.msg import PoseStamped
 
 
 def get_goal(msg):
     global goal
-    goal = msg.data
+    goal = msg
     global received_goal
     received_goal = True
 
@@ -22,7 +23,7 @@ if __name__ == '__main__':
     state_pub = rospy.Publisher('navigation/status', Int32, queue_size=1)
 
     client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
-    goal_sub = rospy.Subscriber('move_base_simple/goal', PoseStamped, get_goal)
+    goal_sub = rospy.Subscriber('navigation/goal', MoveBaseGoal, get_goal)
     
     # wait for action server to be ready
     client.wait_for_server()
@@ -37,11 +38,11 @@ if __name__ == '__main__':
             should_navigate = True
             state_pub.publish(0)
         else: 
-            if client.get_goal_status_text() == 'SUCCEEDED':
+            if client.get_state() == 3:
+                print("did we succeed")
                 state_pub.publish(1)
                 received_goal = False 
                 should_navigate = False 
-            else: 
-                state_pub.publish(0)
+
 
 
