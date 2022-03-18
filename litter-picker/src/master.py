@@ -26,8 +26,6 @@ class LitterPicker:
             self._create_status_callback("navigation")
         )
         self.next_waypoint = way_points[0]
-        self.rotation_points = [0, math.pi/2, math.pi, -math.pi/2]
-        self.next_rotation_point = 0
 
         # information about rotation
         self.rotation_goal_pub = rospy.Publisher('rotation/goal', Float32, queue_size=1)
@@ -35,6 +33,8 @@ class LitterPicker:
             'rotation/status',
             self._create_status_callback('rotation')
         )
+        self.rotation_points = [0, math.pi / 2, math.pi, -math.pi / 2]
+        self.next_rotation_point = 0
 
     def _create_status_callback(self, node_name):
         def _callback(msg):
