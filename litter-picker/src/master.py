@@ -47,7 +47,7 @@ class LitterPicker:
     def _go_to_next_waypoint(self):
         next_waypoint = self.next_waypoint
         self.nav_goal_pub.publish(next_waypoint)
-        if self.status['navigation'] == 1:
+        if self.status['navigation'] == 2:
             self.state = WAITING_FOR_ROBOT_TO_REACH_WAYPOINT
 
     def _reached_waypoint(self):
@@ -62,7 +62,8 @@ class LitterPicker:
     def _rotate(self):
         next_rotation_point = self.next_rotation_point
         self.rotation_goal_pub.publish(math.pi / 4)
-        self.state = WAITING_FOR_ROBOT_TO_FINISH_ROTATE
+        if (self.status['rotation'] == 2):
+            self.state = WAITING_FOR_ROBOT_TO_FINISH_ROTATE
 
     def _finished_rotating(self):
         if self.status['rotation'] == 1:
@@ -78,10 +79,10 @@ class LitterPicker:
         elif self.state == WAITING_FOR_ROBOT_TO_REACH_WAYPOINT:
             self._reached_waypoint()
         elif self.state == AT_A_WAYPOINT:
-            self.state = GO_TO_NEXT_WAYPOINT_STATE
-            #self._rotate()
-        # elif self.state == WAITING_FOR_ROBOT_TO_FINISH_ROTATE:
-        #     self._finished_rotating()
+            #self.state = GO_TO_NEXT_WAYPOINT_STATE
+            self._rotate()
+        elif self.state == WAITING_FOR_ROBOT_TO_FINISH_ROTATE:
+            self._finished_rotating()
         elif self.state == AT_A_WAYPOINT_NEEDS_PROCESSING_IMAGE:
             self.state = GO_TO_NEXT_WAYPOINT_STATE
 

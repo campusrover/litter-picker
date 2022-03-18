@@ -36,7 +36,7 @@ if __name__ == '__main__':
             client.send_goal(goal)
             received_goal = True
             should_navigate = True
-            state_pub.publish(0)
+            state_pub.publish(2)
         else: 
             if client.get_state() == 3:
                 print("did we succeed")

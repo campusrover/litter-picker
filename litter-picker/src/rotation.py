@@ -33,14 +33,16 @@ if __name__ == '__main__':
 
     while not rospy.is_shutdown():
         if (position != None and rotation_goal != None):
-            z = position.angular.z 
+            z = position.pose.pose.orientation.z 
 
             if (rotation_goal - z) != 0:
                 twist.angular.z = 0.2 
-                state_pub.publish(0)
+                state_pub.publish(2)
+                print("rotating!", rotation_goal, " ", z, " ", rotation_goal - z)
             else:  
                 twist.angular.z = 0 
                 state_pub.publish(1)
+                print("finished rotating")
                 
             cmd_vel_pub.publish(twist)
             
