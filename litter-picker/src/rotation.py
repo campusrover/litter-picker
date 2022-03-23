@@ -6,10 +6,6 @@ from geometry_msgs.msg import Twist
 import math
 from nav_msgs.msg import Odometry
 
-def get_state(msg):
-    global state
-    state = msg.data
-
 def odom_cb(msg):
     global position 
     position = msg
@@ -28,21 +24,22 @@ if __name__ == '__main__':
 
     position = None
     rotation_goal = None
-
+    state = -1
     twist = Twist()
 
-    while not rospy.is_shutdown():
+    while not rospy.is_shutdown() and state != 3:
         if (position != None and rotation_goal != None):
             z = position.pose.pose.orientation.z 
 
-            if (rotation_goal - z) != 0:
+            if (rotation_goal - z) > 0.21:
                 twist.angular.z = 0.2 
-                state_pub.publish(2)
+                state = 0
                 print("rotating!", rotation_goal, " ", z, " ", rotation_goal - z)
             else:  
                 twist.angular.z = 0 
-                state_pub.publish(1)
+                state = 1
                 print("finished rotating")
-                
+
             cmd_vel_pub.publish(twist)
+            state_pub.publish(state)
             

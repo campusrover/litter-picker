@@ -48,6 +48,7 @@ class LitterPicker:
         next_waypoint = self.next_waypoint
         self.nav_goal_pub.publish(next_waypoint)
         if self.status['navigation'] == 2:
+            print("waiting for robot to reach waypoint")
             self.state = WAITING_FOR_ROBOT_TO_REACH_WAYPOINT
 
     def _reached_waypoint(self):
@@ -58,11 +59,13 @@ class LitterPicker:
             else: 
                 self.next_waypoint_index = self.next_waypoint_index + 1
             self.next_waypoint = self.waypoints[self.next_waypoint_index]
+            print("waypoint: ", self.next_waypoint)
 
     def _rotate(self):
         next_rotation_point = self.next_rotation_point
         self.rotation_goal_pub.publish(math.pi / 4)
         if (self.status['rotation'] == 2):
+            print("waiting for robot to finish rotate")
             self.state = WAITING_FOR_ROBOT_TO_FINISH_ROTATE
 
     def _finished_rotating(self):
@@ -70,7 +73,9 @@ class LitterPicker:
             self.state = AT_A_WAYPOINT
             self.next_rotation_point = self.next_rotation_point + 1
             if self.next_rotation_point == len(self.rotation_points):
-                self.state = AT_A_WAYPOINT_NEEDS_PROCESSING_IMAGE
+                print("at a waypoint needs processing image")
+                self.state == GO_TO_NEXT_WAYPOINT_STATE
+                #self.state = AT_A_WAYPOINT_NEEDS_PROCESSING_IMAGE
                 self.next_rotation_point = 0
 
     def perform_action(self):
@@ -93,4 +98,5 @@ if __name__ == '__main__':
     litter_picker = LitterPicker(read_waypoints(waypoints_file))
 
     while not rospy.is_shutdown():
+        print(litter_picker.state)
         litter_picker.perform_action()

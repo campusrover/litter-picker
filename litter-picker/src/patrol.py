@@ -29,20 +29,22 @@ if __name__ == '__main__':
     client.wait_for_server()
 
     received_goal = False
+    state = -1
 
     # Loop until ^c
-    while not rospy.is_shutdown():
+    while not rospy.is_shutdown() and state != 1:
         if not received_goal:
             client.send_goal(goal)
             received_goal = True
             should_navigate = True
-            state_pub.publish(2)
+            state = 2
         else: 
             if client.get_state() == 3:
                 print("did we succeed")
-                state_pub.publish(1)
+                state = 1
                 received_goal = False 
                 should_navigate = False 
-
+    
+        state_pub.publish(state)
 
 
