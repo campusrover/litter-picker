@@ -13,6 +13,7 @@ def odom_cb(msg):
 def rotation_cb(msg):
     global rotation_goal
     rotation_goal = msg.data
+    #print(rotation_goal)
 
 # Main program starts here
 if __name__ == '__main__':
@@ -27,18 +28,21 @@ if __name__ == '__main__':
     state = -1
     twist = Twist()
 
-    while not rospy.is_shutdown() and state != 3:
+    while not rospy.is_shutdown():
+        
         if (position != None and rotation_goal != None):
             z = position.pose.pose.orientation.z 
 
-            if (rotation_goal - z) > 0.21:
+            if (abs(rotation_goal - z) > 0.2):
                 twist.angular.z = 0.2 
-                state = 0
+                state = 2
                 print("rotating!", rotation_goal, " ", z, " ", rotation_goal - z)
             else:  
                 twist.angular.z = 0 
                 state = 1
-                print("finished rotating")
+                position = None 
+                rotation_goal = None
+                #print("finished rotating")
 
             cmd_vel_pub.publish(twist)
             state_pub.publish(state)

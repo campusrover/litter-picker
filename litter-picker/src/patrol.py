@@ -32,7 +32,7 @@ if __name__ == '__main__':
     state = -1
 
     # Loop until ^c
-    while not rospy.is_shutdown() and state != 1:
+    while not rospy.is_shutdown():
         if not received_goal:
             client.send_goal(goal)
             received_goal = True
@@ -40,8 +40,10 @@ if __name__ == '__main__':
             state = 2
         else: 
             if client.get_state() == 3:
-                print("did we succeed")
+                print("did we succeed", state)
                 state = 1
+
+                print("state after", state)
                 received_goal = False 
                 should_navigate = False 
     
