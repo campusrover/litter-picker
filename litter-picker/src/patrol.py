@@ -2,43 +2,51 @@
 import rospy
 import actionlib
 from utils import read_waypoints
-from move_base_msgs.msg import MoveBaseAction
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 import constants
 from std_msgs.msg import Int32
+from geometry_msgs.msg import PoseStamped
 
 
-def get_state(msg: Int32):
-    global state
-    state = msg.data
+def get_goal(msg):
+    global goal
+    goal = msg
+    global received_goal
+    received_goal = True
 
 
 # Main program starts here
 if __name__ == '__main__':
-    state = constants.GO_TO_NEXT_WAYPOINT
+    goal = MoveBaseGoal()
     rospy.init_node('patrol')
 
-    pub = rospy.Publisher(constants.STATE_TOPIC_NAME, Int32, queue_size=1)
-
-    waypoints_file = rospy.get_param('~waypoints_file')
-    waypoints = read_waypoints(waypoints_file)
+    state_pub = rospy.Publisher('navigation/status', Int32, queue_size=1)
 
     client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
-    state_sub = rospy.Subscriber(constants.STATE_TOPIC_NAME, Int32, get_state)
-
+    goal_sub = rospy.Subscriber('navigation/goal', MoveBaseGoal, get_goal)
+    
     # wait for action server to be ready
     client.wait_for_server()
 
+    received_goal = False
+    state = -1
+
     # Loop until ^c
     while not rospy.is_shutdown():
-        # repeat the waypoints over and over again
-        for goal in waypoints:
-            print("Going for goal: ", goal)
-
+        if not received_goal:
             client.send_goal(goal)
-            client.wait_for_result()
-            pub.publish(constants.REACHED_WAYPOINT)
-            #print("STATE:", state)
+            received_goal = True
+            should_navigate = True
+            state = 2
+        else: 
+            if client.get_state() == 3:
+                print("did we succeed", state)
+                state = 1
 
-            # wait for the rotation to be finished
-            # while state != constants.GO_TO_NEXT_WAYPOINT and not rospy.is_shutdown():
-            #     continue
+                print("state after", state)
+                received_goal = False 
+                should_navigate = False 
+    
+        state_pub.publish(state)
+
+

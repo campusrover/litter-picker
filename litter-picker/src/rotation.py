@@ -1,43 +1,49 @@
 #!/usr/bin/env python
 import rospy
-from std_msgs.msg import Int32
+from std_msgs.msg import Int32, Float32
 import constants
 from geometry_msgs.msg import Twist
 import math
+from nav_msgs.msg import Odometry
 
-state_pub = rospy.Publisher(constants.STATE_TOPIC_NAME, Int32, queue_size=1)
-cmd_vel_pub = rospy.Publisher("cmd_vel", Twist, queue_size=10)
+def odom_cb(msg):
+    global position 
+    position = msg
 
-
-def get_state(msg: Int32):
-    global state
-    state = msg.data
-
+def rotation_cb(msg):
+    global rotation_goal
+    rotation_goal = msg.data
+    #print(rotation_goal)
 
 # Main program starts here
 if __name__ == '__main__':
-    state = constants.GO_TO_NEXT_WAYPOINT
     rospy.init_node('rotation')
-    state_sub = rospy.Subscriber(constants.STATE_TOPIC_NAME, Int32, get_state)
-    time_started_rotation = rospy.Time.now()
+    state_pub = rospy.Publisher('rotation/status', Int32, queue_size=1)
+    odom_sub = rospy.Subscriber('odom', Odometry, odom_cb)
+    rotation_sub = rospy.Subscriber('rotation/goal', Float32, rotation_cb)
+    cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+
+    position = None
+    rotation_goal = None
+    state = -1
     twist = Twist()
 
     while not rospy.is_shutdown():
-        if state == constants.REACHED_WAYPOINT:
-            print("STATE in if", state)
-            print("reached waypoint")
-            time_started_rotation = rospy.Time.now()
-            state_pub.publish(constants.ROTATING)
-        elif state == constants.ROTATING:
-            while (rospy.Time.now() - time_started_rotation).to_sec() <= 4 and not rospy.is_shutdown():
-                print("STATE in while", state)
-                print("inside rotation loop")
-                twist.angular.z = math.pi/2
-                cmd_vel_pub.publish(twist)
-            state_pub.publish(constants.GO_TO_NEXT_WAYPOINT)
-            print("STATE after while", state)
-            twist.angular.z = 0
+        
+        if (position != None and rotation_goal != None):
+            z = position.pose.pose.orientation.z 
+
+            if (abs(rotation_goal - z) > 0.2):
+                twist.angular.z = 0.2 
+                state = 2
+                print("rotating!", rotation_goal, " ", z, " ", rotation_goal - z)
+            else:  
+                twist.angular.z = 0 
+                state = 1
+                position = None 
+                rotation_goal = None
+                #print("finished rotating")
+
             cmd_vel_pub.publish(twist)
-            print("TWIST: ", twist.angular.z)
-            print("end rotating")
+            state_pub.publish(state)
             
