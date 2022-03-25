@@ -35,6 +35,3 @@ def _process_waypoint(waypoint_str: str):
         raise ValueError(
             "Fail to convert {}, {}, {} into float".format(x, y, z))
 
-
-def get_state_topic():
-    return rospy.Publisher('state')

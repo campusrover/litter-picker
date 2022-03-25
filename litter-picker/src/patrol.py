@@ -1,52 +1,50 @@
 #!/usr/bin/env python3
 import rospy
 import actionlib
-from utils import read_waypoints
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-import constants
+import states
 from std_msgs.msg import Int32
-from geometry_msgs.msg import PoseStamped
+
+NAVIGATION_SUCCESS_CODE = 3
 
 
-def get_goal(msg):
-    global goal
-    goal = msg
-    global received_goal
-    received_goal = True
+class NavigationNode:
+    def __init__(self):
+        rospy.init_node("patrol")
+
+        self.state = states.AVAILABLE
+        self.goal = []
+        self.state_pub = rospy.Publisher('navigation/status', Int32, queue_size=1)
+        self.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
+        self.goal_sub = rospy.Subscriber('navigation/goal', MoveBaseGoal, self._state_callback())
+        self.client.wait_for_server()
+
+    def _state_callback(self):
+        def cb(msg):
+            # do not accept new goal when haven't finished processing the existing goal
+            if len(self.goal) == 0:
+                self.goal.append(msg)
+        return cb
+
+    def perform_action(self):
+        # only process when we have a goal and the state is available
+        if not len(self.goal) == 0 and self.state == states.AVAILABLE:
+            self.state = states.IN_PROGRESS
+            self.client.send_goal(self.goal[0])
+            self.state_pub.publish(states.IN_PROGRESS)
+        elif self.state == states.IN_PROGRESS:
+            if self.client.get_state() == NAVIGATION_SUCCESS_CODE:
+                self.goal.pop(0)
+                self.state = states.AVAILABLE
+                self.state_pub.publish(states.DONE)
+            else:
+                # continue to publish to indicate it is still in progress
+                self.state_pub.publish(states.IN_PROGRESS)
 
 
 # Main program starts here
 if __name__ == '__main__':
-    goal = MoveBaseGoal()
-    rospy.init_node('patrol')
+    nav = NavigationNode()
 
-    state_pub = rospy.Publisher('navigation/status', Int32, queue_size=1)
-
-    client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
-    goal_sub = rospy.Subscriber('navigation/goal', MoveBaseGoal, get_goal)
-    
-    # wait for action server to be ready
-    client.wait_for_server()
-
-    received_goal = False
-    state = -1
-
-    # Loop until ^c
     while not rospy.is_shutdown():
-        if not received_goal:
-            client.send_goal(goal)
-            received_goal = True
-            should_navigate = True
-            state = 2
-        else: 
-            if client.get_state() == 3:
-                print("did we succeed", state)
-                state = 1
-
-                print("state after", state)
-                received_goal = False 
-                should_navigate = False 
-    
-        state_pub.publish(state)
-
-
+        nav.perform_action()

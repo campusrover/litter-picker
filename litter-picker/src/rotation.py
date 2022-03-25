@@ -1,49 +1,69 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+import math
+
 import rospy
 from std_msgs.msg import Int32, Float32
-import constants
+import states
 from geometry_msgs.msg import Twist
-import math
 from nav_msgs.msg import Odometry
+from tf.transformations import euler_from_quaternion
 
-def odom_cb(msg):
-    global position 
-    position = msg
 
-def rotation_cb(msg):
-    global rotation_goal
-    rotation_goal = msg.data
-    #print(rotation_goal)
+class RotationNode:
+    def __init__(self):
+        rospy.init_node('rotation')
+        self.position = Odometry()
+        self.rotation_goal = []
+        self.state = states.AVAILABLE
+        self.state_pub = rospy.Publisher('rotation/status', Int32, queue_size=1)
+        self.odom_sub = rospy.Subscriber('odom', Odometry, self._create_odom_cb())
+        self.rotation_sub = rospy.Subscriber('rotation/goal', Float32, self._create_rotation_cb())
+        self.cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+
+    def _create_odom_cb(self):
+        def cb(msg):
+            self.position = msg
+        return cb
+
+    def _create_rotation_cb(self):
+        def cb(msg):
+            if len(self.rotation_goal) == 0:
+                self.rotation_goal.append(msg.data)
+        return cb
+
+    def perform_action(self):
+        if self.state == states.AVAILABLE and len(self.rotation_goal) != 0:
+            self.state = states.IN_PROGRESS
+        elif self.state == states.IN_PROGRESS:
+            twist = Twist()
+
+            # get the current orientation
+            orientation = self.position.pose.pose.orientation
+            _, _, yaw = euler_from_quaternion([orientation.x, orientation.y, orientation.z, orientation.w])
+            if yaw < 0:
+                yaw += 2 * math.pi
+
+            # get difference between the current orientation and the target
+            diff = yaw - self.rotation_goal[0]
+            if abs(diff) < 0.1:
+                twist.angular.z = 0
+                self.cmd_vel_pub.publish(twist)
+                self.state = states.DONE
+            else:
+                twist.angular.z = 0.2
+                print("diff ", diff)
+                self.cmd_vel_pub.publish(twist)
+                self.state_pub.publish(states.IN_PROGRESS)
+        elif self.state == states.DONE:
+            # remove it since we are done rotating
+            self.rotation_goal.pop(0)
+            self.state_pub.publish(states.DONE)
+            self.state = states.AVAILABLE
+
 
 # Main program starts here
 if __name__ == '__main__':
-    rospy.init_node('rotation')
-    state_pub = rospy.Publisher('rotation/status', Int32, queue_size=1)
-    odom_sub = rospy.Subscriber('odom', Odometry, odom_cb)
-    rotation_sub = rospy.Subscriber('rotation/goal', Float32, rotation_cb)
-    cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
-
-    position = None
-    rotation_goal = None
-    state = -1
-    twist = Twist()
+    rotation_node = RotationNode()
 
     while not rospy.is_shutdown():
-        
-        if (position != None and rotation_goal != None):
-            z = position.pose.pose.orientation.z 
-
-            if (abs(rotation_goal - z) > 0.2):
-                twist.angular.z = 0.2 
-                state = 2
-                print("rotating!", rotation_goal, " ", z, " ", rotation_goal - z)
-            else:  
-                twist.angular.z = 0 
-                state = 1
-                position = None 
-                rotation_goal = None
-                #print("finished rotating")
-
-            cmd_vel_pub.publish(twist)
-            state_pub.publish(state)
-            
+        rotation_node.perform_action()

@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
+import math
+
 import rospy
+import states
 from move_base_msgs.msg import MoveBaseGoal
 from std_msgs.msg import Float32, Int32
 from utils import read_waypoints
-import math
 
 # The states of the cleaner
 GO_TO_NEXT_WAYPOINT_STATE = 0
@@ -11,13 +13,16 @@ WAITING_FOR_ROBOT_TO_REACH_WAYPOINT = 1
 AT_A_WAYPOINT = 2
 WAITING_FOR_ROBOT_TO_FINISH_ROTATE = 3
 AT_A_WAYPOINT_NEEDS_PROCESSING_IMAGE = 4
+WAITING_FOR_NAVIGATION_TO_START = 5
+WAITING_FOR_ROTATION_TO_START = 6
 
 
 class LitterPicker:
-    def __init__(self, way_points):
+    def __init__(self):
+        rospy.init_node("litter-picker")
         self.state = GO_TO_NEXT_WAYPOINT_STATE
-        self.status = {'navigation': 0, 'rotation': 0}
-        self.waypoints = way_points
+        self.status = {'navigation': states.AVAILABLE, 'rotation': states.AVAILABLE}
+        self.waypoints = read_waypoints(rospy.get_param('~waypoints_file'))
 
         # information about navigation
         self.nav_goal_pub = rospy.Publisher('navigation/goal', MoveBaseGoal, queue_size=1)
@@ -25,17 +30,17 @@ class LitterPicker:
             'navigation/status', Int32,
             self._create_status_callback("navigation")
         )
-        
+
         self.next_waypoint_index = 0
         self.next_waypoint = self.waypoints[self.next_waypoint_index]
 
         # information about rotation
         self.rotation_goal_pub = rospy.Publisher('rotation/goal', Float32, queue_size=1)
         self.nav_sub = rospy.Subscriber(
-            'rotation/status', Int32, 
+            'rotation/status', Int32,
             self._create_status_callback('rotation')
         )
-        self.rotation_points = [.25, .5 , .75, 1, -1.0]
+        self.rotation_points = [0, math.pi/2, math.pi, 3 * math.pi/2]
         self.next_rotation_point = 0
 
     def _create_status_callback(self, node_name):
@@ -47,66 +52,78 @@ class LitterPicker:
     def _go_to_next_waypoint(self):
         next_waypoint = self.next_waypoint
         self.nav_goal_pub.publish(next_waypoint)
-        if self.status['navigation'] == 2:
-            print("waiting for robot to reach waypoint ", self.state, " ", self.status)
+        self.state = WAITING_FOR_NAVIGATION_TO_START
+
+
+    def _waiting_for_navigation_to_start(self):
+        if self.status['navigation'] == states.IN_PROGRESS \
+                or self.status['navigation'] == states.DONE:
             self.state = WAITING_FOR_ROBOT_TO_REACH_WAYPOINT
+        else:
+            self.nav_goal_pub.publish(self.next_waypoint)
 
     def _reached_waypoint(self):
-        if self.status['navigation'] == 1:
+        if self.status['navigation'] == states.DONE:
+            rospy.loginfo("reached destination")
             self.state = AT_A_WAYPOINT
-            if (self.next_waypoint_index + 1 >= len(self.waypoints)):
+            if self.next_waypoint_index + 1 >= len(self.waypoints):
                 self.next_waypoint_index = 0
-            else: 
+            else:
                 self.next_waypoint_index = self.next_waypoint_index + 1
             self.next_waypoint = self.waypoints[self.next_waypoint_index]
-            print("waypoint: ", self.next_waypoint)
-            print("status: ", self.status)
+            self._reset_nodes_status()
+        else:
+            target_pos = self.next_waypoint.target_pose.pose.position
+            rospy.loginfo("waiting for the navigation node to reach ({}, {})".format(target_pos.x, target_pos.y))
 
     def _rotate(self):
         next_rotation_point = self.next_rotation_point
-        #self.rotation_goal_pub.publish(self.rotation_points)
         self.rotation_goal_pub.publish(self.rotation_points[next_rotation_point])
-        print("rotation goal: ", self.rotation_points[next_rotation_point])
-        if (self.status['rotation'] == 2):
-            print("waiting for robot to finish rotate ", self.state, " ", self.status)
+        self.state = WAITING_FOR_ROTATION_TO_START
+
+    def _waiting_for_rotation_to_start(self):
+        if self.status['rotation'] == states.IN_PROGRESS \
+                or self.status['rotation'] == states.DONE:
             self.state = WAITING_FOR_ROBOT_TO_FINISH_ROTATE
+        else:
+            self.rotation_goal_pub.publish(self.rotation_points[self.next_rotation_point])
 
     def _finished_rotating(self):
-        if self.status['rotation'] == 1:
-            print("finished rotating", self.state, " ", self.status)
+        if self.status['rotation'] == states.DONE:
+            rospy.loginfo("finished rotating")
             self.state = AT_A_WAYPOINT
-            
-            if (self.next_rotation_point < len(self.rotation_points) - 1):
-                self.next_rotation_point = self.next_rotation_point + 1
-            print("new rotation goal: ", self.rotation_points[self.next_rotation_point])
-            if self.rotation_points[self.next_rotation_point] == -1.0:
-                self.status["rotation"] = 0
-                self.status['navigation'] = 0
-                print("at a waypoint needs processing image ", self.state, " ", self.status)
+            self.next_rotation_point = self.next_rotation_point + 1
+            # we have finished rotating all the points
+            if self.next_rotation_point >= len(self.rotation_points):
                 self.state = GO_TO_NEXT_WAYPOINT_STATE
-                #self.state = AT_A_WAYPOINT_NEEDS_PROCESSING_IMAGE
                 self.next_rotation_point = 0
-           
+            else:
+                self.state = AT_A_WAYPOINT
+            self._reset_nodes_status()
+        else:
+            rospy.loginfo("waiting for robot to rotate to " + str(self.rotation_points[self.next_rotation_point]))
+
+    def _reset_nodes_status(self):
+        self.status["rotation"] = 0
+        self.status['navigation'] = 0
 
     def perform_action(self):
         if self.state == GO_TO_NEXT_WAYPOINT_STATE:
             self._go_to_next_waypoint()
         elif self.state == WAITING_FOR_ROBOT_TO_REACH_WAYPOINT:
             self._reached_waypoint()
+        elif self.state == WAITING_FOR_NAVIGATION_TO_START:
+            self._waiting_for_navigation_to_start()
         elif self.state == AT_A_WAYPOINT:
-            #self.state = GO_TO_NEXT_WAYPOINT_STATE
             self._rotate()
+        elif self.state == WAITING_FOR_ROTATION_TO_START:
+            self._waiting_for_rotation_to_start()
         elif self.state == WAITING_FOR_ROBOT_TO_FINISH_ROTATE:
             self._finished_rotating()
-        elif self.state == AT_A_WAYPOINT_NEEDS_PROCESSING_IMAGE:
-            self.state = GO_TO_NEXT_WAYPOINT_STATE
 
 
 if __name__ == '__main__':
-    rospy.init_node('litter-picker')
-    waypoints_file = rospy.get_param('~waypoints_file')
-    litter_picker = LitterPicker(read_waypoints(waypoints_file))
+    litter_picker = LitterPicker()
 
     while not rospy.is_shutdown():
-        #print(litter_picker.state)
         litter_picker.perform_action()
