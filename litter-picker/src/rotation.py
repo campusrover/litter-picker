@@ -51,7 +51,6 @@ class RotationNode:
                 self.state = states.DONE
             else:
                 twist.angular.z = 0.2
-                print("diff ", diff)
                 self.cmd_vel_pub.publish(twist)
                 self.state_pub.publish(states.IN_PROGRESS)
         elif self.state == states.DONE:
