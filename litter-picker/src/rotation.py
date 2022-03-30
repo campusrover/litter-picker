@@ -69,6 +69,8 @@ class RotationNode:
 # Main program starts here
 if __name__ == '__main__':
     rotation_node = RotationNode()
+    rate = rospy.Rate(10)
 
     while not rospy.is_shutdown():
         rotation_node.perform_action()
+        rate.sleep()

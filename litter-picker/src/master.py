@@ -123,6 +123,8 @@ class LitterPicker:
 
 if __name__ == '__main__':
     litter_picker = LitterPicker()
+    rate = rospy.Rate(10)
 
     while not rospy.is_shutdown():
         litter_picker.perform_action()
+        rate.sleep()

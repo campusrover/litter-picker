@@ -48,6 +48,8 @@ class NavigationNode:
 # Main program starts here
 if __name__ == '__main__':
     nav = NavigationNode()
+    rate = rospy.Rate(10)
 
     while not rospy.is_shutdown():
         nav.perform_action()
+        rate.sleep()
