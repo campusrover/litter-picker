@@ -1,5 +1,11 @@
 <launch>
-    <include file="$(find litter-picker)/launch/navigation.launch" />
+    <include file="$(find litter-picker)/launch/navigation.launch">
+      <arg name="initial_pose_x" default="0"/>
+      <arg name="initial_pose_y" default="0"/>
+      <arg name="initial_pose_a" default="0"/>
+      <arg name="map_file" default="$(find litter-picker)/maps/outside_lab.yaml"/>
+    </include>
+
     <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_empty_world.launch" />
 
     <node name="master" pkg="litter-picker" type="master.py" output="screen">
