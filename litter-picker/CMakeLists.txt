@@ -8,4 +8,3 @@ find_package(catkin REQUIRED COMPONENTS
   turtlebot3_navigation
   turtlebot3_slam
 )
-
