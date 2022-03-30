@@ -32,6 +32,4 @@ def _process_waypoint(waypoint_str: str):
         return float(x), float(y), float(z)
     except:
         rospy.ERROR("Fail to convert {}, {}, {} into float".format(x, y, z))
-        raise ValueError(
-            "Fail to convert {}, {}, {} into float".format(x, y, z))
-
+        raise ValueError("Fail to convert {}, {}, {} into float".format(x, y, z))

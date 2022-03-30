@@ -18,6 +18,7 @@ WAITING_FOR_ROTATION_TO_START = 6
 
 
 class LitterPicker:
+
     def __init__(self):
         rospy.init_node("litter-picker")
         self.state = GO_TO_NEXT_WAYPOINT_STATE
@@ -26,24 +27,21 @@ class LitterPicker:
 
         # information about navigation
         self.nav_goal_pub = rospy.Publisher('navigation/goal', MoveBaseGoal, queue_size=1)
-        self.nav_sub = rospy.Subscriber(
-            'navigation/status', Int32,
-            self._create_status_callback("navigation")
-        )
+        self.nav_sub = rospy.Subscriber('navigation/status', Int32,
+                                        self._create_status_callback("navigation"))
 
         self.next_waypoint_index = 0
         self.next_waypoint = self.waypoints[self.next_waypoint_index]
 
         # information about rotation
         self.rotation_goal_pub = rospy.Publisher('rotation/goal', Float32, queue_size=1)
-        self.nav_sub = rospy.Subscriber(
-            'rotation/status', Int32,
-            self._create_status_callback('rotation')
-        )
-        self.rotation_points = [0, math.pi/2, math.pi, 3 * math.pi/2]
+        self.nav_sub = rospy.Subscriber('rotation/status', Int32,
+                                        self._create_status_callback('rotation'))
+        self.rotation_points = [0, math.pi / 2, math.pi, 3 * math.pi / 2]
         self.next_rotation_point = 0
 
     def _create_status_callback(self, node_name):
+
         def _callback(msg):
             self.status[node_name] = msg.data
 
@@ -53,7 +51,6 @@ class LitterPicker:
         next_waypoint = self.next_waypoint
         self.nav_goal_pub.publish(next_waypoint)
         self.state = WAITING_FOR_NAVIGATION_TO_START
-
 
     def _waiting_for_navigation_to_start(self):
         if self.status['navigation'] == states.IN_PROGRESS \
@@ -74,7 +71,8 @@ class LitterPicker:
             self._reset_nodes_status()
         else:
             target_pos = self.next_waypoint.target_pose.pose.position
-            rospy.loginfo("waiting for the navigation node to reach ({}, {})".format(target_pos.x, target_pos.y))
+            rospy.loginfo("waiting for the navigation node to reach ({}, {})".format(
+                target_pos.x, target_pos.y))
 
     def _rotate(self):
         next_rotation_point = self.next_rotation_point
@@ -101,7 +99,8 @@ class LitterPicker:
                 self.state = AT_A_WAYPOINT
             self._reset_nodes_status()
         else:
-            rospy.loginfo("waiting for robot to rotate to " + str(self.rotation_points[self.next_rotation_point]))
+            rospy.loginfo("waiting for robot to rotate to " +
+                          str(self.rotation_points[self.next_rotation_point]))
 
     def _reset_nodes_status(self):
         self.status["rotation"] = 0

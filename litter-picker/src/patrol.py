@@ -9,6 +9,7 @@ NAVIGATION_SUCCESS_CODE = 3
 
 
 class NavigationNode:
+
     def __init__(self):
         rospy.init_node("patrol")
 
@@ -20,10 +21,12 @@ class NavigationNode:
         self.client.wait_for_server()
 
     def _state_callback(self):
+
         def cb(msg):
             # do not accept new goal when haven't finished processing the existing goal
             if len(self.goal) == 0:
                 self.goal.append(msg)
+
         return cb
 
     def perform_action(self):

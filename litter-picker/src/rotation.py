@@ -10,6 +10,7 @@ from tf.transformations import euler_from_quaternion
 
 
 class RotationNode:
+
     def __init__(self):
         rospy.init_node('rotation')
         self.position = Odometry()
@@ -21,14 +22,18 @@ class RotationNode:
         self.cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
 
     def _create_odom_cb(self):
+
         def cb(msg):
             self.position = msg
+
         return cb
 
     def _create_rotation_cb(self):
+
         def cb(msg):
             if len(self.rotation_goal) == 0:
                 self.rotation_goal.append(msg.data)
+
         return cb
 
     def perform_action(self):
@@ -39,7 +44,8 @@ class RotationNode:
 
             # get the current orientation
             orientation = self.position.pose.pose.orientation
-            _, _, yaw = euler_from_quaternion([orientation.x, orientation.y, orientation.z, orientation.w])
+            _, _, yaw = euler_from_quaternion(
+                [orientation.x, orientation.y, orientation.z, orientation.w])
             if yaw < 0:
                 yaw += 2 * math.pi
 
