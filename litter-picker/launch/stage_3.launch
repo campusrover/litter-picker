@@ -14,6 +14,6 @@
         <param name="waypoints_file" type="string" value="$(find litter-picker)/waypoints/stage3_waypoints.txt"/>
     </node>
 
-    <node name="patrol" pkg="litter-picker" type="patrol.py" output="screen"/>
+    <node name="navigation" pkg="litter-picker" type="navigation.py" output="screen"/>
     <node name="rotation" pkg="litter-picker" type="rotation.py" output="screen"/>
 </launch>
