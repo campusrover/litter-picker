@@ -3,15 +3,15 @@
       <arg name="initial_pose_x" default="0"/>
       <arg name="initial_pose_y" default="0"/>
       <arg name="initial_pose_a" default="0"/>
-      <arg name="map_file" default="$(find litter-picker)/maps/outside_lab.yaml"/>
+      <arg name="map_file" default="$(find litter-picker)/maps/stage3.yaml"/>
     </include>
 
-    <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_empty_world.launch" />
+    <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_stage_3.launch"/>
 
     <include file="$(find darknet_ros)/launch/darknet_ros.launch"/>
 
     <node name="master" pkg="litter-picker" type="master.py" output="screen">
-        <param name="waypoints_file" type="string" value="$(find litter-picker)/waypoints/hello_world_waypoints.txt"/>
+        <param name="waypoints_file" type="string" value="$(find litter-picker)/waypoints/stage3_waypoints.txt"/>
     </node>
 
     <node name="navigation" pkg="litter-picker" type="navigation.py" output="screen"/>
