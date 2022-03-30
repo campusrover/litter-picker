@@ -1,3 +1,5 @@
+# pylint's config file based on Google Python Style Guide (https://github.com/google/seq2seq/blob/master/pylintrc)
+
 [MASTER]
 
 # Specify a configuration file.
