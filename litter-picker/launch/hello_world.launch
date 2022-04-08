@@ -6,7 +6,9 @@
       <arg name="map_file" default="$(find litter-picker)/maps/outside_lab.yaml"/>
     </include>
 
-    <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_empty_world.launch" />
+    <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_empty_world.launch">
+        <arg name="image" value="/raspicam_node/image/compressed">
+    </include>
 
     <include file="$(find darknet_ros)/launch/darknet_ros.launch"/>
 

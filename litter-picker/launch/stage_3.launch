@@ -6,7 +6,9 @@
       <arg name="map_file" default="$(find litter-picker)/maps/stage3.yaml"/>
     </include>
 
-    <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_stage_3.launch"/>
+    <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_stage_3.launch">
+        <arg name="image" value="/camera/rgb/image_raw/compressed"/>
+    </include>
 
     <include file="$(find darknet_ros)/launch/darknet_ros.launch"/>
 
