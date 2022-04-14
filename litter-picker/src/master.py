@@ -4,7 +4,7 @@ import math
 import rospy
 import states
 from move_base_msgs.msg import MoveBaseGoal
-from std_msgs.msg import Float32, Int32
+from std_msgs.msg import Float32, Int32, String
 from utils import read_waypoints
 
 # The states of the cleaner
@@ -16,6 +16,17 @@ AT_A_WAYPOINT_NEEDS_PROCESSING_IMAGE = 4
 WAITING_FOR_NAVIGATION_TO_START = 5
 WAITING_FOR_ROTATION_TO_START = 6
 
+# States description
+states_description = [
+    "Preparing the robot to move toward the next waypoint",
+    "Waiting for the robot to reach the waypoint",
+    "Currently at a waypoint",
+    "Waiting for the robot to finish rotating",
+    "Processing image to detect trash",
+    "Waiting for the navigation node to start",
+    "Waiting for the rotation node to start"
+]
+
 
 class LitterPicker:
 
@@ -24,6 +35,9 @@ class LitterPicker:
         self.state = GO_TO_NEXT_WAYPOINT_STATE
         self.status = {'navigation': states.AVAILABLE, 'rotation': states.AVAILABLE}
         self.waypoints = read_waypoints(rospy.get_param('~waypoints_file'))
+
+        # publisher for its internal state
+        self.state_pub = rospy.Publisher('master/state', String, queue_size=1)
 
         # information about navigation
         self.nav_goal_pub = rospy.Publisher('navigation/goal', MoveBaseGoal, queue_size=1)
@@ -54,7 +68,7 @@ class LitterPicker:
 
     def _waiting_for_navigation_to_start(self):
         if self.status['navigation'] == states.IN_PROGRESS \
-                or self.status['navigation'] == states.DONE:
+            or self.status['navigation'] == states.DONE:
             self.state = WAITING_FOR_ROBOT_TO_REACH_WAYPOINT
         else:
             self.nav_goal_pub.publish(self.next_waypoint)
@@ -81,7 +95,7 @@ class LitterPicker:
 
     def _waiting_for_rotation_to_start(self):
         if self.status['rotation'] == states.IN_PROGRESS \
-                or self.status['rotation'] == states.DONE:
+            or self.status['rotation'] == states.DONE:
             self.state = WAITING_FOR_ROBOT_TO_FINISH_ROTATE
         else:
             self.rotation_goal_pub.publish(self.rotation_points[self.next_rotation_point])
@@ -107,6 +121,7 @@ class LitterPicker:
         self.status['navigation'] = 0
 
     def perform_action(self):
+        self.state_pub.publish(states_description[self.state])
         if self.state == GO_TO_NEXT_WAYPOINT_STATE:
             self._go_to_next_waypoint()
         elif self.state == WAITING_FOR_ROBOT_TO_REACH_WAYPOINT:
