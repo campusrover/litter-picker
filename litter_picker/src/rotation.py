@@ -50,7 +50,7 @@ class RotationActionServer:
         twist.angular.z = 0
         self.cmd_vel_pub.publish(twist)
         self.sever.set_succeeded(
-            str.format("[Rotation Node]: Fail to reach angular position {}", str(goal.a))
+            str.format("[Rotation Node]: Successfully reach angular position {}", str(goal.a))
         )
 
 
