@@ -31,7 +31,7 @@ states_description = [
 class LitterPicker:
 
     def __init__(self):
-        rospy.init_node("litter-picker")
+        rospy.init_node("litter_picker")
         self.state = GO_TO_NEXT_WAYPOINT_STATE
         self.status = {'navigation': states.AVAILABLE, 'rotation': states.AVAILABLE}
         self.waypoints = read_waypoints(rospy.get_param('~waypoints_file'))
