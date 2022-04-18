@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_action_files(
     FILES
     Navigation.action
+    Rotation.action
 )
 
 generate_messages(

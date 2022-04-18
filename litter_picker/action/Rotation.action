@@ -1,0 +1,10 @@
+# Goal definition
+float32 a
+
+---
+# Result definition
+string msg
+
+---
+# Feedback definition
+string msg
