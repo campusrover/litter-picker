@@ -12,7 +12,7 @@ from litter_picker.msg import RotationAction, RotationGoal
 
 class RotationActionServer:
     def __init__(self, name):
-        self.sever = actionlib.SimpleActionServer(
+        self.server = actionlib.SimpleActionServer(
             name,
             RotationAction,
             execute_cb=self.rotate,
@@ -49,7 +49,7 @@ class RotationActionServer:
         # got to the desired state
         twist.angular.z = 0
         self.cmd_vel_pub.publish(twist)
-        self.sever.set_succeeded(
+        self.server.set_succeeded(
             str.format("[Rotation Node]: Successfully reach angular position {}", str(goal.a))
         )
 
