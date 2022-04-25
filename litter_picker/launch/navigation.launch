@@ -1,7 +1,7 @@
 <launch>
   <!-- Arguments -->
   <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
-  <arg name="map_file" default="$(find litter-picker)/maps/outside_lab.yaml"/>
+  <arg name="map_file" default="$(find litter_picker)/maps/outside_lab.yaml"/>
   <arg name="open_rviz" default="true"/>
   <arg name="move_forward_only" default="false"/>
   <arg name="initial_pose_x" default="0"/>
@@ -17,7 +17,7 @@
   <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)"/>
 
   <!-- AMCL -->
-  <include file="$(find litter-picker)/launch/amcl.launch">
+  <include file="$(find litter_picker)/launch/amcl.launch">
     <arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
     <arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
     <arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
