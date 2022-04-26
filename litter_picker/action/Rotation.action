@@ -1,5 +1,5 @@
 # Goal definition
-float32 a
+string msg
 
 ---
 # Result definition

@@ -5,16 +5,15 @@ from actionlib_msgs.msg import GoalStatus
 from std_msgs.msg import String
 
 import actions
-from litter_picker.msg import NavigationAction, RotationAction
+from litter_picker.msg import NavigationAction, RotationAction, RotationGoal
 from darknet_ros_msgs.msg import BoundingBoxes
 from utils import read_waypoints
 
 # the state of the Litter Picker
 GO_TO_WAYPOINT = 0
-DETECT_TRASH = 1
-ROTATE_TOWARD_TRASH = 2
-TRASH_LOCALIZATION = 3
-MOVE_TOWARD_TRASH = 4
+ROTATE_TOWARD_TRASH = 1
+TRASH_LOCALIZATION = 2
+MOVE_TOWARD_TRASH = 3
 
 # failed state of the actionlib
 FAILED_STATES = {
@@ -31,7 +30,6 @@ class LitterPicker:
         rospy.init_node('litter_picker')
         self.state_to_action = {
             GO_TO_WAYPOINT: self.go_to_waypoint,
-            DETECT_TRASH: self.detect_trash,
             ROTATE_TOWARD_TRASH: self.rotate,
         }
 
@@ -49,14 +47,11 @@ class LitterPicker:
         # actionlib clients
         self.navigation_client = actionlib.SimpleActionClient(actions.NAVIGATION_ACTION, NavigationAction)
         self.rotation_client = actionlib.SimpleActionClient(actions.ROTATION_ACTION, RotationAction)
-        print("waiting for server")
         self.navigation_client.wait_for_server()
+        self.rotation_client.wait_for_result()
 
-        # publisher for its current state
+        # publisher for its current state for the GUI to use
         self.state_pub = rospy.Publisher('master/state', String, queue_size=1)
-
-        #self.rotation_client.wait_for_server()
-        print("finished")
 
     def get_object_count_cb(self):
 
@@ -76,30 +71,23 @@ class LitterPicker:
         if self.navigation_client.get_state() == GoalStatus.SUCCEEDED:
             rospy.loginfo("[Master:] Got to the expected waypoint, detecting trash now")
             self.next_waypoint = (self.next_waypoint + 1) % (len(self.waypoints))
-            self.state = GO_TO_WAYPOINT
+            self.state = ROTATE_TOWARD_TRASH
         elif self.navigation_client.get_state() in FAILED_STATES:
             rospy.loginfo("[Master:] Fail to get to the expected waypoint, retrying")
 
-    def detect_trash(self):
-        if self.object_count > 0:
-            rospy.loginfo("Trash found, rotate toward it")
-            self.state = ROTATE_TOWARD_TRASH
-        else:
-            rospy.loginfo("Trash not found, go to the next waypoint")
-            self.state = GO_TO_WAYPOINT
-
     def rotate(self):
-        if self.navigation_client.get_state() == GoalStatus.PENDING:
-            self.rotation_client.send_goal(None)
+        self.state_pub.publish(String("Rotate to detect trash"))
+        self.rotation_client.send_goal(RotationGoal())
+        self.rotation_client.wait_for_result()
 
         if self.rotation_client.get_state() == GoalStatus.SUCCEEDED:
             rospy.loginfo("[Master:] Rotated toward trash, ready to move toward it")
-
             # need to change to TRASH_LOCALIZATION when it is ready
             self.state = GO_TO_WAYPOINT
         elif self.rotation_client.get_state() in FAILED_STATES:
-            rospy.loginfo("Something went wrong, retrying")
-            self.state = DETECT_TRASH
+            rospy.loginfo("No trash, go to next way point instead")
+            self.state_pub.publish(String("No trash found, go the next waypoint instead"))
+            self.state = GO_TO_WAYPOINT
 
     def perform_action(self):
         if self.state not in self.state_to_action:
