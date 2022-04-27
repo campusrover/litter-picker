@@ -3,7 +3,6 @@ import rospy
 import actionlib
 from actionlib import GoalStatus
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-from std_msgs.msg import String
 
 import actions
 from litter_picker.msg import NavigationAction, NavigationGoal, NavigationResult
@@ -19,7 +18,6 @@ class NavigationActionServer:
         self.navigation_client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
         self.navigation_client.wait_for_server()
         self.server.start()
-        self.state_pub = rospy.Publisher('master/state', String, queue_size=1)
         self.result = NavigationResult()
 
     def create_goal_cb(self, goal: NavigationGoal):

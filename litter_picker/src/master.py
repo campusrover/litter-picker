@@ -8,6 +8,7 @@ import actions
 from litter_picker.msg import NavigationAction, RotationAction, RotationGoal
 from darknet_ros_msgs.msg import BoundingBoxes
 from utils import read_waypoints
+import topics
 
 # the state of the Litter Picker
 GO_TO_WAYPOINT = 0
@@ -37,8 +38,6 @@ class LitterPicker:
 
         # state of the bonding box
         self.object_count = 0
-        self.box_sub = rospy.Subscriber('darknet_ros/bounding_boxes', BoundingBoxes,
-                                        self.get_object_count_cb())
 
         # actionlib clients
         self.navigation_client = actionlib.SimpleActionClient(actions.NAVIGATION_ACTION,
@@ -48,7 +47,7 @@ class LitterPicker:
         self.rotation_client.wait_for_result()
 
         # publisher for its current state for the GUI to use
-        self.state_pub = rospy.Publisher('master/state', String, queue_size=1)
+        self.state_pub = rospy.Publisher(topics.STATE_TOPIC, String, queue_size=1)
 
     def get_object_count_cb(self):
 

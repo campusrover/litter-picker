@@ -12,6 +12,7 @@ import rospy
 from geometry_msgs.msg import Twist
 from litter_picker.msg import RotationAction, RotationGoal, RotationResult
 from utils import get_first_bonding_box
+import topics
 
 ROTATION_SPEED = 0.2
 
@@ -23,13 +24,13 @@ class RotationActionServer:
                                                    RotationAction,
                                                    execute_cb=self.rotate,
                                                    auto_start=False)
-        self.cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
-        self.image_sub = rospy.Subscriber('/camera/rgb/image_raw/compressed', CompressedImage,
+        self.cmd_vel_pub = rospy.Publisher(topics.CMD_VEL, Twist, queue_size=10)
+        self.image_sub = rospy.Subscriber(topics.COMPRESSED_IMAGE_TOPIC, CompressedImage,
                                           self.get_width_and_height_cb())
         self.image_wh = None
 
         self.bonding_box_err = None
-        self.box_sub = rospy.Subscriber('darknet_ros/bounding_boxes', BoundingBoxes,
+        self.box_sub = rospy.Subscriber(topics.BOUNDING_BOXES, BoundingBoxes,
                                         self.get_bonding_box_err_cb())
         self.box_id = None
         self.result = RotationResult()
