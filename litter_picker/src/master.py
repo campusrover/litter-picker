@@ -77,6 +77,7 @@ class LitterPicker:
 
     def rotate(self):
         self.state_pub.publish(String("Rotate to detect trash"))
+
         self.rotation_client.send_goal(RotationGoal())
         self.rotation_client.wait_for_result()
 

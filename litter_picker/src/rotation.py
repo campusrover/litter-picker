@@ -24,16 +24,15 @@ class RotationActionServer:
             auto_start=False
         )
         self.cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
-        self.image_sub = rospy.Subscriber('camera/depth/image_raw/compressed', CompressedImage,
+        self.image_sub = rospy.Subscriber('/camera/rgb/image_raw/compressed', CompressedImage,
                                           self.get_width_and_height_cb())
         self.image_wh = None
 
-        self.bonding_box_err = False
+        self.bonding_box_err = None
         self.box_sub = rospy.Subscriber('darknet_ros/bounding_boxes', BoundingBoxes, self.get_bonding_box_err_cb())
         self.result = RotationResult()
-        self.timeout = 4 / ROTATION_SPEED
+        self.timeout = (math.pi * 2 + 1) / ROTATION_SPEED
 
-        self.wait_for_image_width_and_height()
         self.server.start()
 
     def get_width_and_height_cb(self):
@@ -49,26 +48,25 @@ class RotationActionServer:
     def get_bonding_box_err_cb(self):
 
         def cb(msg: BoundingBoxes):
-            if msg.bounding_boxes.count() == 0:
-                self.bonding_box_err = None
+            if self.image_wh is None:
+                rospy.logwarn("unable to get the image's shape")
             else:
-                box: BoundingBox = msg.bounding_boxes[0]
-                center = (box.xmin + box.xmax) / 2
-                self.bonding_box_err = 100 - center
+                _, w, _ = self.image_wh
+                if msg.bounding_boxes.count() == 0:
+                    self.bonding_box_err = None
+                else:
+                    box: BoundingBox = msg.bounding_boxes[0]
+                    center = (box.xmin + box.xmax) / 2
+                    self.bonding_box_err = abs(w - center)
 
         return cb
 
-    def wait_for_image_width_and_height(self):
-        while self.image_wh is None:
-            continue
-        print(self.image_wh)
-
     def rotate(self, goal: RotationGoal):
-        print("hello")
         starting_time = rospy.Time.now().to_sec()
         twist = Twist()
+        print(self.image_wh)
 
-        while (rospy.Time.now() - starting_time).to_sec().real < self.timeout \
+        while (rospy.Time.now().to_sec() - starting_time) < self.timeout \
             and (self.bonding_box_err is None or self.bonding_box_err > 0.1):
             twist.angular.z = ROTATION_SPEED
             self.cmd_vel_pub.publish(twist)
@@ -77,10 +75,10 @@ class RotationActionServer:
         self.cmd_vel_pub.publish(twist)
 
         if self.bonding_box_err is not None:
-            self.result = "Now facing trash"
+            self.result.msg = "Now facing trash"
             self.server.set_succeeded(self.result)
         else:
-            self.result = "No trash found"
+            self.result.msg = "No trash found"
             self.server.set_aborted(self.result)
 
 
