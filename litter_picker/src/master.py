@@ -16,12 +16,7 @@ TRASH_LOCALIZATION = 2
 MOVE_TOWARD_TRASH = 3
 
 # failed state of the actionlib
-FAILED_STATES = {
-    GoalStatus.RECALLED,
-    GoalStatus.REJECTED,
-    GoalStatus.ABORTED,
-    GoalStatus.PREEMPTED
-}
+FAILED_STATES = {GoalStatus.RECALLED, GoalStatus.REJECTED, GoalStatus.ABORTED, GoalStatus.PREEMPTED}
 
 
 class LitterPicker:
@@ -42,10 +37,12 @@ class LitterPicker:
 
         # state of the bonding box
         self.object_count = 0
-        self.box_sub = rospy.Subscriber('darknet_ros/bounding_boxes', BoundingBoxes, self.get_object_count_cb())
+        self.box_sub = rospy.Subscriber('darknet_ros/bounding_boxes', BoundingBoxes,
+                                        self.get_object_count_cb())
 
         # actionlib clients
-        self.navigation_client = actionlib.SimpleActionClient(actions.NAVIGATION_ACTION, NavigationAction)
+        self.navigation_client = actionlib.SimpleActionClient(actions.NAVIGATION_ACTION,
+                                                              NavigationAction)
         self.rotation_client = actionlib.SimpleActionClient(actions.ROTATION_ACTION, RotationAction)
         self.navigation_client.wait_for_server()
         self.rotation_client.wait_for_result()

@@ -16,20 +16,20 @@ ROTATION_SPEED = 0.2
 
 
 class RotationActionServer:
+
     def __init__(self, name):
-        self.server = actionlib.SimpleActionServer(
-            name,
-            RotationAction,
-            execute_cb=self.rotate,
-            auto_start=False
-        )
+        self.server = actionlib.SimpleActionServer(name,
+                                                   RotationAction,
+                                                   execute_cb=self.rotate,
+                                                   auto_start=False)
         self.cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
         self.image_sub = rospy.Subscriber('/camera/rgb/image_raw/compressed', CompressedImage,
                                           self.get_width_and_height_cb())
         self.image_wh = None
 
         self.bonding_box_err = None
-        self.box_sub = rospy.Subscriber('darknet_ros/bounding_boxes', BoundingBoxes, self.get_bonding_box_err_cb())
+        self.box_sub = rospy.Subscriber('darknet_ros/bounding_boxes', BoundingBoxes,
+                                        self.get_bonding_box_err_cb())
         self.result = RotationResult()
         self.timeout = (math.pi * 2 + 1) / ROTATION_SPEED
 

@@ -18,6 +18,7 @@ class StatusWindow(QtWidgets.QWidget):
         self.status_sub = rospy.Subscriber('master/state', String, self.update_state_callback())
 
     def update_state_callback(self):
+
         def cb(msg: String):
             self.state.setText(msg.data)
 

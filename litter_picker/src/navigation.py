@@ -10,13 +10,12 @@ from litter_picker.msg import NavigationAction, NavigationGoal, NavigationResult
 
 
 class NavigationActionServer:
+
     def __init__(self, name):
-        self.server = actionlib.SimpleActionServer(
-            name,
-            NavigationAction,
-            execute_cb=self.create_goal_cb,
-            auto_start=False
-        )
+        self.server = actionlib.SimpleActionServer(name,
+                                                   NavigationAction,
+                                                   execute_cb=self.create_goal_cb,
+                                                   auto_start=False)
         self.navigation_client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
         self.navigation_client.wait_for_server()
         self.server.start()
@@ -42,14 +41,11 @@ class NavigationActionServer:
 
         if self.navigation_client.get_state() == GoalStatus.SUCCEEDED:
             self.result.msg = "[Navigation Node]: Reached location {}, {}".format(goal.x, goal.y)
-            self.server.set_succeeded(
-                self.result
-            )
+            self.server.set_succeeded(self.result)
         else:
-            self.result.msg = "[Navigation Node]: Failed to reach location {}, {}".format(goal.x, goal.y)
-            self.server.set_aborted(
-                self.result
-            )
+            self.result.msg = "[Navigation Node]: Failed to reach location {}, {}".format(
+                goal.x, goal.y)
+            self.server.set_aborted(self.result)
 
     def cancel_goal(self):
         self.navigation_client.cancel_all_goals()
