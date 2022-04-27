@@ -40,6 +40,7 @@ class RotationActionServer:
     def get_width_and_height_cb(self):
 
         def cb(msg: CompressedImage):
+            # infer once during the lifetime of the object
             if self.image_wh is None:
                 bridge = CvBridge()
                 image = bridge.compressed_imgmsg_to_cv2(msg)
@@ -59,7 +60,8 @@ class RotationActionServer:
                     self.bonding_box_err = None
                 else:
                     center = (box.xmin + box.xmax) / 2
-                    self.bonding_box_err = abs(w - center)
+                    image_center = w / 2
+                    self.bonding_box_err = abs(image_center - center)
                     self.box_id = box.id
 
         return cb
