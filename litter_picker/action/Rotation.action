@@ -4,6 +4,7 @@ string msg
 ---
 # Result definition
 string msg
+int16 id
 
 ---
 # Feedback definition

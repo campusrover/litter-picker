@@ -11,6 +11,7 @@ import actions
 import rospy
 from geometry_msgs.msg import Twist
 from litter_picker.msg import RotationAction, RotationGoal, RotationResult
+from utils import get_first_bonding_box
 
 ROTATION_SPEED = 0.2
 
@@ -30,6 +31,7 @@ class RotationActionServer:
         self.bonding_box_err = None
         self.box_sub = rospy.Subscriber('darknet_ros/bounding_boxes', BoundingBoxes,
                                         self.get_bonding_box_err_cb())
+        self.box_id = None
         self.result = RotationResult()
         self.timeout = (math.pi * 2 + 1) / ROTATION_SPEED
 
@@ -52,19 +54,19 @@ class RotationActionServer:
                 rospy.logwarn("unable to get the image's shape")
             else:
                 _, w, _ = self.image_wh
-                if msg.bounding_boxes.count() == 0:
+                box = get_first_bonding_box(msg.bounding_boxes)
+                if box is None:
                     self.bonding_box_err = None
                 else:
-                    box: BoundingBox = msg.bounding_boxes[0]
                     center = (box.xmin + box.xmax) / 2
                     self.bonding_box_err = abs(w - center)
+                    self.box_id = box.id
 
         return cb
 
     def rotate(self, goal: RotationGoal):
         starting_time = rospy.Time.now().to_sec()
         twist = Twist()
-        print(self.image_wh)
 
         while (rospy.Time.now().to_sec() - starting_time) < self.timeout \
             and (self.bonding_box_err is None or self.bonding_box_err > 0.1):
@@ -76,6 +78,7 @@ class RotationActionServer:
 
         if self.bonding_box_err is not None:
             self.result.msg = "Now facing trash"
+            self.result.id = self.box_id
             self.server.set_succeeded(self.result)
         else:
             self.result.msg = "No trash found"
