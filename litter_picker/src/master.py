@@ -46,7 +46,8 @@ class LitterPicker:
         self.navigation_client = actionlib.SimpleActionClient(actions.NAVIGATION_ACTION,
                                                               NavigationAction)
         self.rotation_client = actionlib.SimpleActionClient(actions.ROTATION_ACTION, RotationAction)
-        self.trash_localizer_client = actionlib.SimpleActionClient(actions.TRASH_ACTION, TrashAction)
+        self.trash_localizer_client = actionlib.SimpleActionClient(actions.TRASH_ACTION,
+                                                                   TrashAction)
 
         self.navigation_client.wait_for_server()
         self.rotation_client.wait_for_result()
@@ -98,8 +99,8 @@ class LitterPicker:
         trash_goal = TrashGoal()
         trash_goal.box_id = self.box_id
 
-        self.state_pub.publish(
-            "Trying to locate the trash located at pixel ({}, {})".format(trash_goal.box_x, trash_goal.box_y))
+        self.state_pub.publish("Trying to locate the trash located at pixel ({}, {})".format(
+            trash_goal.box_x, trash_goal.box_y))
 
         self.trash_localizer_client.send_goal(TrashGoal())
         self.trash_localizer_client.wait_for_result()

@@ -47,4 +47,4 @@ def get_first_bonding_box(boxes: BoundingBoxes, box_id=None) -> Optional[Boundin
 
 
 def dist_between_two(x_now, y_now, x_origin, y_origin):
-    return math.sqrt((x_now - x_origin) ** 2 + (y_now - y_origin) ** 2)
+    return math.sqrt((x_now - x_origin)**2 + (y_now - y_origin)**2)

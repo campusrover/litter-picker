@@ -4,7 +4,7 @@ import actionlib
 
 from geometry_msgs.msg import PoseWithCovarianceStamped, Quaternion, Pose, Point, Twist
 from darknet_ros_msgs.msg import BoundingBoxes, ObjectCount, BoundingBox
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CompressedImage
 import cv2
 from cv_bridge import CvBridge
 import math
@@ -18,7 +18,9 @@ class TrashLocalizationNode:
 
     def __init__(self):
         rospy.init_node("trash_localizer")
-        self.server = actionlib.SimpleActionServer(TRASH_ACTION, TrashAction, execute_cb=self.perform_action,
+        self.server = actionlib.SimpleActionServer(TRASH_ACTION,
+                                                   TrashAction,
+                                                   execute_cb=self.perform_action,
                                                    auto_start=False)
         self.server.start()
 
@@ -30,20 +32,23 @@ class TrashLocalizationNode:
         self.result = TrashResult()
         self.box_id = None
 
-        self.pose_sub = rospy.Subscriber(topics.AMCL_LOC, PoseWithCovarianceStamped, self._pose_cb())
-        self.depth_sub = rospy.Subscriber(topics.DEPTH_CAMERA, Image, self._depth_cb())
+        self.pose_sub = rospy.Subscriber(topics.AMCL_LOC, PoseWithCovarianceStamped,
+                                         self._pose_cb())
+        self.depth_sub = rospy.Subscriber(topics.DEPTH_CAMERA, CompressedImage, self._depth_cb())
         self.box_sub = rospy.Subscriber(topics.BOUNDING_BOXES, BoundingBoxes, self._box_cb())
 
         self.vel = Twist()
         self.cmd_vel_pub = rospy.Publisher(topics.CMD_VEL, Twist, queue_size=10)
 
     def _pose_cb(self):
+
         def pose_cb(msg):
             self.current_pose = msg.pose
 
         return pose_cb
 
     def _box_cb(self):
+
         def box_cb(msg: BoundingBoxes):
             if self.box_id is None:
                 rospy.logwarn("No valid box id")
@@ -59,9 +64,10 @@ class TrashLocalizationNode:
         return box_cb
 
     def _depth_cb(self):
+
         def depth_cb(msg):
             bridge = CvBridge()
-            self.image = bridge.imgmsg_to_cv2(msg)
+            self.image = bridge.compressed_imgmsg_to_cv2(msg)
             self.img_height, self.img_width = self.image.shape
             # rospy.loginfo("[trash_localizer] image size -> h: %s, w: %s", self.img_height, self.img_width)
             # width: 1920
@@ -87,14 +93,16 @@ class TrashLocalizationNode:
                     self.server.set_aborted(self.result)
 
                 distance_covered = dist_between_two(self.current_pose.pose.position.x,
-                                                    self.current_pose.pose.position.y, original_x, original_y)
+                                                    self.current_pose.pose.position.y, original_x,
+                                                    original_y)
                 # get center of object
                 x_center, y_center = self.get_bonding_box_coordinate()
                 # print("The center pixel value is: %s", frame[y_center][x_center])
 
                 # get distance from robot to object
                 rospy.loginfo("[Trash Localizer: ] distance_covered: {}".format(distance_covered))
-                rospy.loginfo("[Trash Localizer: ] distance_left: {}".format(distance - distance_covered))
+                rospy.loginfo("[Trash Localizer: ] distance_left: {}".format(distance -
+                                                                             distance_covered))
 
                 # assume that the object is in the center of the screen
                 # and move towards it until it cannot be seen anymore, then stop

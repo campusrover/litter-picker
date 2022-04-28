@@ -25,7 +25,7 @@ class RotationActionServer:
                                                    execute_cb=self.rotate,
                                                    auto_start=False)
         self.cmd_vel_pub = rospy.Publisher(topics.CMD_VEL, Twist, queue_size=10)
-        self.image_sub = rospy.Subscriber(topics.IMAGE_TOPIC, Image,
+        self.image_sub = rospy.Subscriber(topics.IMAGE_TOPIC, CompressedImage,
                                           self.get_width_and_height_cb())
         self.image_wh = None
 
