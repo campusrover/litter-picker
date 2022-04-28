@@ -87,8 +87,8 @@ class TrashLocalizationNode:
                 # print("The center pixel value is: %s", frame[y_center][x_center])
 
                 # get distance from robot to object
-                rospy.loginfo("[Trash Localizer: ] distance_covered: ", distance_covered)
-                rospy.loginfo("[Trash Localizer: ] distance_left: ", distance - distance_covered)
+                rospy.loginfo("[Trash Localizer: ] distance_covered: {}".format(distance_covered))
+                rospy.loginfo("[Trash Localizer: ] distance_left: {}".format(distance - distance_covered))
 
                 # assume that the object is in the center of the screen
                 # and move towards it until it cannot be seen anymore, then stop
@@ -96,8 +96,8 @@ class TrashLocalizationNode:
                 self.vel.linear.x = 0.2
                 self.vel.angular.z = err / 3500
 
-                rospy.loginfo("[Trash Localizer: ] linear_vel: ", self.vel.linear.x)
-                rospy.loginfo("[Trash Localizer: ] angular_vel: ", self.vel.angular.z)
+                rospy.loginfo("[Trash Localizer: ] linear_vel: {}".format(self.vel.linear.x))
+                rospy.loginfo("[Trash Localizer: ] angular_vel: {}".format(self.vel.angular.z))
                 self.cmd_vel_pub.publish(self.vel)
 
             # got the object or lost track of the bounding box, so we stop
@@ -124,12 +124,15 @@ class TrashLocalizationNode:
         elif len(self.box_coordinates) != 2:
             return None
         else:
-            x, y = int(self.box_coordinates[0]), int(self.box_coordinates[1])
-            w, h = self.img_width, self.img_height
-            if w >= x or h >= y:
+            try:
+                x, y = int(self.box_coordinates[0]), int(self.box_coordinates[1])
+                h, w = self.image.shape
+                if x >= h or y >= w:
+                    return None
+                else:
+                    return x, y
+            except:
                 return None
-            else:
-                return x, y
 
 
 if __name__ == '__main__':
