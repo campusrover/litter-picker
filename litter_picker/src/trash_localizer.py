@@ -78,6 +78,7 @@ class TrashLocalizationNode:
 
             while distance_covered < distance:
                 if self.get_bonding_box_coordinate() is None:
+                    self.reset_node()
                     self.server.set_aborted(self.result)
 
                 distance_covered = dist_between_two(self.current_pose.pose.position.x,
@@ -104,12 +105,12 @@ class TrashLocalizationNode:
             self.vel.linear.x = 0
             self.vel.angular.z = 0
             self.cmd_vel_pub.publish(self.vel)
+            self.reset_node()
             self.server.set_succeeded(self.result)
 
     def perform_action(self, goal: TrashGoal):
         self.box_id = goal.box_id
         self.get_distance_vision(self.image)
-        self.reset_node()
 
     def reset_node(self):
         self.current_pose = None
