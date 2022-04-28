@@ -5,7 +5,7 @@ import actionlib
 import cv2
 from cv_bridge import CvBridge
 from darknet_ros_msgs.msg import BoundingBoxes, BoundingBox
-from sensor_msgs.msg import CompressedImage
+from sensor_msgs.msg import CompressedImage, Image
 
 import actions
 import rospy
@@ -25,16 +25,16 @@ class RotationActionServer:
                                                    execute_cb=self.rotate,
                                                    auto_start=False)
         self.cmd_vel_pub = rospy.Publisher(topics.CMD_VEL, Twist, queue_size=10)
-        self.image_sub = rospy.Subscriber(topics.COMPRESSED_IMAGE_TOPIC, CompressedImage,
+        self.image_sub = rospy.Subscriber(topics.IMAGE_TOPIC, Image,
                                           self.get_width_and_height_cb())
         self.image_wh = None
 
         self.bonding_box_err = None
         self.box_sub = rospy.Subscriber(topics.BOUNDING_BOXES, BoundingBoxes,
                                         self.get_bonding_box_err_cb())
-        self.box_id = None
+        self.box = None
         self.result = RotationResult()
-        self.timeout = (math.pi * 2 + 1) / ROTATION_SPEED
+        self.timeout = (math.pi * 2) / ROTATION_SPEED
 
         self.server.start()
 
@@ -71,21 +71,28 @@ class RotationActionServer:
         starting_time = rospy.Time.now().to_sec()
         twist = Twist()
 
-        while (rospy.Time.now().to_sec() - starting_time) < self.timeout \
-            and (self.bonding_box_err is None or self.bonding_box_err > 0.1):
+        while (rospy.Time.now().to_sec() - starting_time) < self.timeout:
             twist.angular.z = ROTATION_SPEED
+            self.cmd_vel_pub.publish(twist)
+
+        while rospy.Time.now().to_sec() - starting_time < 3:
+            twist.angular.z = 0
             self.cmd_vel_pub.publish(twist)
 
         twist.angular.z = 0
         self.cmd_vel_pub.publish(twist)
 
         if self.bonding_box_err is not None:
-            self.result.msg = "Now facing trash"
-            self.result.id = self.box_id
+            self.result.msg = "Trash found"
+            self.result.box_id = self.box.id
             self.server.set_succeeded(self.result)
         else:
             self.result.msg = "No trash found"
             self.server.set_aborted(self.result)
+
+    def reset(self):
+        self.bonding_box_err = None
+        self.box = None
 
 
 # Main program starts here

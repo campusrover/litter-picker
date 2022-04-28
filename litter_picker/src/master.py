@@ -5,7 +5,8 @@ from actionlib_msgs.msg import GoalStatus
 from std_msgs.msg import String
 
 import actions
-from litter_picker.msg import NavigationAction, RotationAction, RotationGoal
+from litter_picker.msg import NavigationAction, RotationAction, RotationGoal, NavigationGoal, TrashAction, TrashGoal, \
+    TrashResult
 from darknet_ros_msgs.msg import BoundingBoxes
 from utils import read_waypoints
 import topics
@@ -14,7 +15,6 @@ import topics
 GO_TO_WAYPOINT = 0
 ROTATE_TOWARD_TRASH = 1
 TRASH_LOCALIZATION = 2
-MOVE_TOWARD_TRASH = 3
 
 # failed state of the actionlib
 FAILED_STATES = {GoalStatus.RECALLED, GoalStatus.REJECTED, GoalStatus.ABORTED, GoalStatus.PREEMPTED}
@@ -27,6 +27,7 @@ class LitterPicker:
         self.state_to_action = {
             GO_TO_WAYPOINT: self.go_to_waypoint,
             ROTATE_TOWARD_TRASH: self.rotate,
+            TRASH_LOCALIZATION: self.get_location_of_trash,
         }
 
         # should try to move toward a waypoint at the beginning
@@ -38,11 +39,15 @@ class LitterPicker:
 
         # state of the bonding box
         self.object_count = 0
+        self.box_id = 0
+        self.trash_location = (0, 0, 0)
 
         # actionlib clients
         self.navigation_client = actionlib.SimpleActionClient(actions.NAVIGATION_ACTION,
                                                               NavigationAction)
         self.rotation_client = actionlib.SimpleActionClient(actions.ROTATION_ACTION, RotationAction)
+        self.trash_localizer_client = actionlib.SimpleActionClient(actions.TRASH_ACTION, TrashAction)
+
         self.navigation_client.wait_for_server()
         self.rotation_client.wait_for_result()
 
@@ -79,12 +84,33 @@ class LitterPicker:
 
         if self.rotation_client.get_state() == GoalStatus.SUCCEEDED:
             rospy.loginfo("[Master:] Rotated toward trash, ready to move toward it")
-            # need to change to TRASH_LOCALIZATION when it is ready
-            self.state = GO_TO_WAYPOINT
+            self.state = TRASH_LOCALIZATION
+
+            rotation_goal = self.rotation_client.get_result()
+            self.box_id = self.rotation_client.box_id
+
         elif self.rotation_client.get_state() in FAILED_STATES:
             rospy.loginfo("No trash, go to next way point instead")
             self.state_pub.publish(String("No trash found, go the next waypoint instead"))
             self.state = GO_TO_WAYPOINT
+
+    def get_location_of_trash(self):
+        trash_goal = TrashGoal()
+        trash_goal.box_id = self.box_id
+
+        self.state_pub.publish(
+            "Trying to locate the trash located at pixel ({}, {})".format(trash_goal.box_x, trash_goal.box_y))
+
+        self.trash_localizer_client.send_goal(TrashGoal())
+        self.trash_localizer_client.wait_for_result()
+
+        if self.trash_localizer_client.get_state() == GoalStatus.SUCCEEDED:
+            rospy.loginfo("[Master: ] Got the trash, rotating to see if there are trash nearby")
+            self.state = ROTATE_TOWARD_TRASH
+
+        elif self.trash_localizer_client.get_state() in FAILED_STATES:
+            rospy.loginfo("[Master: ] Lost track of the trash, rotating to rediscover the trash")
+            self.state = ROTATE_TOWARD_TRASH
 
     def perform_action(self):
         if self.state not in self.state_to_action:

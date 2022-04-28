@@ -8,9 +8,9 @@
 
     <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_stage_3.launch"/>
 
-    <include file="$(find darknet_ros)/launch/darknet_ros.launch">
-        <arg name="image" value="/camera/rgb/image_raw/compressed"/>
-    </include>
+    <include file="$(find darknet_ros)/launch/darknet_ros.launch"/>
+        <!-- <arg name="image" value="/camera/rgb/image_raw/compressed"/>
+    </include> -->
 
     <node name="master" pkg="litter_picker" type="master.py" output="screen">
         <param name="waypoints_file" type="string" value="$(find litter_picker)/waypoints/stage3_waypoints.txt"/>
@@ -20,4 +20,5 @@
 
     <node name="navigation" pkg="litter_picker" type="navigation.py" output="screen"/>
     <node name="rotation" pkg="litter_picker" type="rotation.py" output="screen"/>
+    <node name="trash_localizer" pkg="litter_picker" type="trash_localizer.py" output="screen"/>
 </launch>

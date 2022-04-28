@@ -1,3 +1,4 @@
+import math
 from typing import Optional, List
 
 from darknet_ros_msgs.msg import BoundingBoxes, BoundingBox
@@ -32,7 +33,12 @@ def _process_waypoint(waypoint_str: str):
 
 
 def get_first_bonding_box(boxes: BoundingBoxes) -> Optional[BoundingBox]:
-    for box in boxes.bounding_boxes:
+    for box in boxes:
+        rospy.loginfo("found {} as bounding box".format(box.Class))
         if box.Class in trash_classes:
             return box
     return None
+
+
+def dist_between_two(x_now, y_now, x_origin, y_origin):
+    return math.sqrt((x_now - x_origin) ** 2 + (y_now - y_origin) ** 2)

@@ -15,6 +15,7 @@ add_action_files(
     FILES
     Navigation.action
     Rotation.action
+    Trash.action
 )
 
 generate_messages(
