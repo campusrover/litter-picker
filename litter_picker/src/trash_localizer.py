@@ -67,6 +67,7 @@ class TrashLocalizationNode:
 
     def get_distance_vision(self, frame):
         if self.get_bonding_box_coordinate() is None:
+            self.reset_node()
             self.server.set_aborted(self.result)
         else:
             x, y = self.get_bonding_box_coordinate()

@@ -85,9 +85,11 @@ class RotationActionServer:
         if self.bonding_box_err is not None:
             self.result.msg = "Trash found"
             self.result.box_id = self.box.id
+            self.reset()
             self.server.set_succeeded(self.result)
         else:
             self.result.msg = "No trash found"
+            self.reset()
             self.server.set_aborted(self.result)
 
     def reset(self):
