@@ -32,11 +32,17 @@ def _process_waypoint(waypoint_str: str):
         raise ValueError("Fail to convert {}, {}, {} into float".format(x, y, z))
 
 
-def get_first_bonding_box(boxes: BoundingBoxes) -> Optional[BoundingBox]:
+def get_first_bonding_box(boxes: BoundingBoxes, box_id=None) -> Optional[BoundingBox]:
     for box in boxes:
         rospy.loginfo("found {} as bounding box".format(box.Class))
         if box.Class in trash_classes:
-            return box
+            if box_id is None:
+                return box
+            else:
+                if box.id == box_id:
+                    return box
+                else:
+                    return None
     return None
 
 

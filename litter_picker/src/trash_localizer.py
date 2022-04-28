@@ -28,7 +28,7 @@ class TrashLocalizationNode:
         self.img_height = 0
         self.img_width = 0
         self.result = TrashResult()
-        self.box_id = 0
+        self.box_id = None
 
         self.pose_sub = rospy.Subscriber(topics.AMCL_LOC, PoseWithCovarianceStamped, self._pose_cb())
         self.depth_sub = rospy.Subscriber(topics.DEPTH_CAMERA, Image, self._depth_cb())
@@ -45,12 +45,16 @@ class TrashLocalizationNode:
 
     def _box_cb(self):
         def box_cb(msg: BoundingBoxes):
-            box = get_first_bonding_box(msg.bounding_boxes)
-            if box is not None:
-                self.box_coordinates[0] = (box.xmax + box.xmin) / 2
-                self.box_coordinates[1] = (box.ymax + box.xmin) / 2
-            else:
+            if self.box_id is None:
+                rospy.logwarn("No valid box id")
                 self.box_coordinates = None
+            else:
+                box = get_first_bonding_box(msg.bounding_boxes, self.box_id)
+                if box is not None:
+                    self.box_coordinates[0] = (box.xmax + box.xmin) / 2
+                    self.box_coordinates[1] = (box.ymax + box.xmin) / 2
+                else:
+                    self.box_coordinates = None
 
         return box_cb
 
@@ -117,7 +121,7 @@ class TrashLocalizationNode:
         self.current_pose = None
         self.box_coordinates = [None] * 2
         self.image = []
-        self.box_id = 0
+        self.box_id = None
         self.result = TrashResult()
 
     def get_bonding_box_coordinate(self):
