@@ -1,4 +1,4 @@
-IMAGE_TOPIC = '/camera/rgb/image_raw/compressed'
+IMAGE_TOPIC = '/usb_cam/image_raw/compressed'
 CMD_VEL = 'cmd_vel'
 BOUNDING_BOXES = 'darknet_ros/bounding_boxes'
 STATE_TOPIC = 'master/state'
