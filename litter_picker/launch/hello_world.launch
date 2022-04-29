@@ -1,0 +1,24 @@
+<launch>
+    <include file="$(find litter_picker)/launch/navigation.launch">
+      <arg name="initial_pose_x" default="0"/>
+      <arg name="initial_pose_y" default="0"/>
+      <arg name="initial_pose_a" default="0"/>
+      <arg name="map_file" default="$(find litter-picker)/maps/outside_lab.yaml"/>
+    </include>
+
+    <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_empty_world.launch"/>
+
+    <include file="$(find darknet_ros)/launch/darknet_ros.launch">
+         <arg name="image" value="/raspicam_node/image/compressed"/>
+    </include>
+
+    <node name="gui" pkg="litter_picker" type="gui.py" output="screen"/>
+
+    <node name="master" pkg="litter_picker" type="master.py" output="screen">
+        <param name="waypoints_file" type="string" value="$(find litter_picker)/waypoints/hello_world_waypoints.txt"/>
+    </node>
+
+    <node name="navigation" pkg="litter_picker" type="navigation.py" output="screen"/>
+    <node name="rotation" pkg="litter_picker" type="rotation.py" output="screen"/>
+    <node name="trash_localizer" pkg="litter_picker" type="trash_localizer.py" output="screen"/>
+</launch>

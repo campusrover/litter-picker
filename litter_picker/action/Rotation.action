@@ -1,0 +1,10 @@
+# Goal definition
+
+---
+# Result definition
+string msg
+int16 box_id
+
+---
+# Feedback definition
+string msg
