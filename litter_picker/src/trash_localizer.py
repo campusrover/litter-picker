@@ -17,7 +17,6 @@ from utils import dist_between_two, get_first_bonding_box
 class TrashLocalizationNode:
 
     def __init__(self):
-        rospy.init_node("trash_localizer")
         self.server = actionlib.SimpleActionServer(TRASH_ACTION,
                                                    TrashAction,
                                                    execute_cb=self.perform_action,
@@ -72,51 +71,8 @@ class TrashLocalizationNode:
         return depth_cb
 
     def get_distance_vision(self, frame):
-        print("bonding_box_coordinate: {}".format(self.get_bonding_box_coordinate()))
-        if self.get_bonding_box_coordinate() is None:
-            self.reset_node()
-            self.server.set_aborted(self.result)
-        else:
-            x, y = self.get_bonding_box_coordinate()
-            distance = frame[x][y]
-            distance = 0 if math.isnan(distance) else distance
-
-            original_x, original_y = self.current_pose.pose.position.x, self.current_pose.pose.position.y
-            distance_covered = 0
-
-            while distance_covered < distance:
-                if self.get_bonding_box_coordinate() is None:
-                    self.reset_node()
-                    self.server.set_aborted(self.result)
-
-                distance_covered = dist_between_two(self.current_pose.pose.position.x,
-                                                    self.current_pose.pose.position.y, original_x,
-                                                    original_y)
-                # get center of object
-                x_center, y_center = self.get_bonding_box_coordinate()
-                # print("The center pixel value is: %s", frame[y_center][x_center])
-
-                # get distance from robot to object
-                rospy.loginfo("[Trash Localizer: ] distance_covered: {}".format(distance_covered))
-                rospy.loginfo("[Trash Localizer: ] distance_left: {}".format(distance -
-                                                                             distance_covered))
-
-                # assume that the object is in the center of the screen
-                # and move towards it until it cannot be seen anymore, then stop
-                err = (self.img_width / 2 - x_center)
-                self.vel.linear.x = 0.2
-                self.vel.angular.z = err / 3500
-
-                rospy.loginfo("[Trash Localizer: ] linear_vel: {}".format(self.vel.linear.x))
-                rospy.loginfo("[Trash Localizer: ] angular_vel: {}".format(self.vel.angular.z))
-                self.cmd_vel_pub.publish(self.vel)
-
-            # got the object or lost track of the bounding box, so we stop
-            self.vel.linear.x = 0
-            self.vel.angular.z = 0
-            self.cmd_vel_pub.publish(self.vel)
-            self.reset_node()
-            self.server.set_succeeded(self.result)
+        print("trash_localizer is triggered")
+        self.server.set_succeeded(self.result)
 
     def perform_action(self, goal: TrashGoal):
         self.box_id = goal.box_id
@@ -149,6 +105,8 @@ class TrashLocalizationNode:
 
 
 if __name__ == '__main__':
+    rospy.init_node("trash_localizer")
+    rospy.loginfo('Localization Node is running')
     nav = TrashLocalizationNode()
     rate = rospy.Rate(10)
 

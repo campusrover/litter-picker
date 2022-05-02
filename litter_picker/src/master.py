@@ -51,7 +51,7 @@ class LitterPicker:
 
         self.navigation_client.wait_for_server()
         self.rotation_client.wait_for_server()
-        self.trash_localizer_client.wait_for_server()
+        #self.trash_localizer_client.wait_for_server()
 
         # publisher for its current state for the GUI to use
         self.state_pub = rospy.Publisher(topics.STATE_TOPIC, String, queue_size=1)
@@ -67,8 +67,8 @@ class LitterPicker:
         next_waypoint = self.waypoints[self.next_waypoint]
 
         self.navigation_client.send_goal(next_waypoint)
-        self.state_pub.publish("Moving toward waypoint ({}, {}, {})".format(
-            str(next_waypoint.x), str(next_waypoint.y), str(next_waypoint.z)))
+        #self.state_pub.publish("Moving toward waypoint ({}, {}, {})".format(
+                #str(next_waypoint.target_pose.pose.position.x), str(next_waypoint.target_pose.pose.position.y), str(next_waypoint.target_pose.pose.position.z)))
         self.navigation_client.wait_for_result()
 
         if self.navigation_client.get_state() == GoalStatus.SUCCEEDED:
@@ -81,7 +81,9 @@ class LitterPicker:
     def rotate(self):
         self.state_pub.publish(String("Rotate to detect trash"))
 
+        print("sending goal to rotate")
         self.rotation_client.send_goal(RotationGoal())
+        print("waiting for the rotation goal")
         self.rotation_client.wait_for_result()
 
         if self.rotation_client.get_state() == GoalStatus.SUCCEEDED:
@@ -114,6 +116,9 @@ class LitterPicker:
             self.state = ROTATE_TOWARD_TRASH
 
     def perform_action(self):
+        self.state_pub.publish(str(self.state))
+        print(str(self.state))
+
         if self.state not in self.state_to_action:
             rospy.logerr("Unknown state! Go back to the initial state")
             self.state = GO_TO_WAYPOINT
