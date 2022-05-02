@@ -5,8 +5,8 @@ from actionlib_msgs.msg import GoalStatus
 from std_msgs.msg import String
 
 import actions
-from litter_picker.msg import NavigationAction, RotationAction, RotationGoal, NavigationGoal, TrashAction, TrashGoal, \
-    TrashResult
+from litter_picker.msg import RotationAction, RotationGoal, TrashAction, TrashGoal
+from move_base_msgs.msg import MoveBaseAction
 from darknet_ros_msgs.msg import BoundingBoxes
 from utils import read_waypoints
 import topics
@@ -44,7 +44,7 @@ class LitterPicker:
 
         # actionlib clients
         self.navigation_client = actionlib.SimpleActionClient(actions.NAVIGATION_ACTION,
-                                                              NavigationAction)
+                                                              MoveBaseAction)
         self.rotation_client = actionlib.SimpleActionClient(actions.ROTATION_ACTION, RotationAction)
         self.trash_localizer_client = actionlib.SimpleActionClient(actions.TRASH_ACTION,
                                                                    TrashAction)
