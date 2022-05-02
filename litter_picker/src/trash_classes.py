@@ -5,4 +5,5 @@ trash_classes = {
     "fork",
     "knife",
     "spoon",
+    "fire hydrant"
 }

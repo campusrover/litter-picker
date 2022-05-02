@@ -35,6 +35,7 @@ class RotationActionServer:
         self.box = None
         self.result = RotationResult()
         self.timeout = (math.pi * 2) / ROTATION_SPEED
+        self.box_id = None
 
         self.server.start()
 
@@ -71,7 +72,7 @@ class RotationActionServer:
         starting_time = rospy.Time.now().to_sec()
         twist = Twist()
 
-        while (rospy.Time.now().to_sec() - starting_time) < self.timeout:
+        while (rospy.Time.now().to_sec() - starting_time) < self.timeout and self.box_id is None:
             twist.angular.z = ROTATION_SPEED
             self.cmd_vel_pub.publish(twist)
 
@@ -84,7 +85,7 @@ class RotationActionServer:
 
         if self.bonding_box_err is not None:
             self.result.msg = "Trash found"
-            self.result.box_id = self.box.id
+            self.result.box_id = self.box_id
             self.reset()
             self.server.set_succeeded(self.result)
         else:
@@ -95,6 +96,7 @@ class RotationActionServer:
     def reset(self):
         self.bonding_box_err = None
         self.box = None
+        self.box_id = None
 
 
 # Main program starts here

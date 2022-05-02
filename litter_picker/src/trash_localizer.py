@@ -50,16 +50,12 @@ class TrashLocalizationNode:
     def _box_cb(self):
 
         def box_cb(msg: BoundingBoxes):
-            if self.box_id is None:
-                rospy.logwarn("No valid box id")
-                self.box_coordinates = None
+            box = get_first_bonding_box(msg.bounding_boxes)
+            if box is not None:
+                self.box_coordinates[0] = (box.xmax + box.xmin) / 2
+                self.box_coordinates[1] = (box.ymax + box.xmin) / 2
             else:
-                box = get_first_bonding_box(msg.bounding_boxes, self.box_id)
-                if box is not None:
-                    self.box_coordinates[0] = (box.xmax + box.xmin) / 2
-                    self.box_coordinates[1] = (box.ymax + box.xmin) / 2
-                else:
-                    self.box_coordinates = None
+                self.box_coordinates = [None] * 2
 
         return box_cb
 
@@ -76,6 +72,7 @@ class TrashLocalizationNode:
         return depth_cb
 
     def get_distance_vision(self, frame):
+        print("bonding_box_coordinate: {}".format(self.get_bonding_box_coordinate()))
         if self.get_bonding_box_coordinate() is None:
             self.reset_node()
             self.server.set_aborted(self.result)
@@ -133,6 +130,8 @@ class TrashLocalizationNode:
         self.result = TrashResult()
 
     def get_bonding_box_coordinate(self):
+        print("self.box_coordinates {}".format(self.box_coordinates))
+        print("self.image.shape: {}".format(self.image.shape))
         if self.box_coordinates is None:
             return None
         elif len(self.box_coordinates) != 2:

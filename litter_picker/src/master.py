@@ -50,7 +50,8 @@ class LitterPicker:
                                                                    TrashAction)
 
         self.navigation_client.wait_for_server()
-        self.rotation_client.wait_for_result()
+        self.rotation_client.wait_for_server()
+        self.trash_localizer_client.wait_for_server()
 
         # publisher for its current state for the GUI to use
         self.state_pub = rospy.Publisher(topics.STATE_TOPIC, String, queue_size=1)
@@ -88,7 +89,7 @@ class LitterPicker:
             self.state = TRASH_LOCALIZATION
 
             rotation_goal = self.rotation_client.get_result()
-            self.box_id = self.rotation_client.box_id
+            self.box_id = rotation_goal.box_id
 
         elif self.rotation_client.get_state() in FAILED_STATES:
             rospy.loginfo("No trash, go to next way point instead")
@@ -99,8 +100,7 @@ class LitterPicker:
         trash_goal = TrashGoal()
         trash_goal.box_id = self.box_id
 
-        self.state_pub.publish("Trying to locate the trash located at pixel ({}, {})".format(
-            trash_goal.box_x, trash_goal.box_y))
+        self.state_pub.publish("Trying to move toward the trash with box_id {}".format(self.box_id))
 
         self.trash_localizer_client.send_goal(TrashGoal())
         self.trash_localizer_client.wait_for_result()
