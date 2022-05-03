@@ -37,8 +37,9 @@ class TrashLocalizer(Task):
         return pose_cb
 
     def start(self):
+        dist_to_trash_local = self.dist_to_trash
         dist_covered = 0
-        while not rospy.is_shutdown() and (dist_covered < self.self.dist_to_trash):
+        while not rospy.is_shutdown() and (dist_covered < dist_to_trash_local):
             self.vel.angular.z = self.err_to_center/3000
             cmd_vel_pub.publish(self.vel) 
             dist_covered = dist_between_two(self.current_pose.pose.position.x, self.current_pose.pose.position.y, original_x, original_y)
