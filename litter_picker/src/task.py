@@ -3,6 +3,7 @@ from master import LitterPickerState
 
 
 class Task:
+
     def __init__(self, state: LitterPickerState):
         """
         constructor fo the task

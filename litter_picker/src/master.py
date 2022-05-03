@@ -5,12 +5,14 @@ import rospy
 
 
 class LitterPickerState:
+
     def __init__(self, waypoints):
         self.waypoints = waypoints
         self.current_waypoint_index = 0
 
 
 class LitterPicker:
+
     def __init__(self, task: Task, state: LitterPickerState):
         self.current_task = task
         self.state = state

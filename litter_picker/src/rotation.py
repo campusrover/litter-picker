@@ -8,6 +8,7 @@ from master import LitterPickerState
 from task import Task
 from litter_picker.msg import Trash
 from navigation import NavigationTask
+from trash_localizer import TrashLocalizerTask
 
 ROTATION_SPEED = 0.2
 
@@ -32,7 +33,8 @@ class RotationTask(Task):
         starting_time = rospy.Time.now().to_sec()
         twist = Twist()
 
-        while not rospy.is_shutdown() and (rospy.Time.now().to_sec() - starting_time) < self.timeout and self.has_trash is False:
+        while not rospy.is_shutdown() and (rospy.Time.now().to_sec() - starting_time
+                                           ) < self.timeout and self.has_trash is False:
             twist.angular.z = ROTATION_SPEED
             self.cmd_vel_pub.publish(twist)
 
@@ -43,7 +45,7 @@ class RotationTask(Task):
     def next(self):
         if self.has_trash:
             rospy.loginfo("Found trash ready to move toward it")
-            return Rotation(self.state)
+            return TrashLocalizerTask(self.state)
         else:
             rospy.loginfo("Did not find trash, will go to the next waypoint instead")
             return NavigationTask(self.state)

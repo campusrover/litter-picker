@@ -27,18 +27,16 @@ class NavigationTask(Task):
 
             if self.move_base_client.get_state() == GoalStatus.SUCCEEDED:
                 rospy.loginfo("[Navigation Task] has successfully reached location {}, {}".format(
-                    waypoint.target_pose.pose.position.x,
-                    waypoint.target_pose.pose.position.y
-                ))
+                    waypoint.target_pose.pose.position.x, waypoint.target_pose.pose.position.y))
             else:
-                rospy.logwarn("[Navigation Task] has failed reached location {}, {}: try again".format(
-                    waypoint.target_pose.pose.position.x,
-                    waypoint.target_pose.pose.position.y
-                ))
+                rospy.logwarn(
+                    "[Navigation Task] has failed reached location {}, {}: try again".format(
+                        waypoint.target_pose.pose.position.x, waypoint.target_pose.pose.position.y))
 
     def next(self):
         if self.has_succeed:
-            self.state.current_waypoint_index = (self.state.current_waypoint_index + 1) % len(self.state.waypoints)
+            self.state.current_waypoint_index = (self.state.current_waypoint_index + 1) % len(
+                self.state.waypoints)
             # At this point we should create an instance of the RotationTask
             return RotationTask(self.state)
         else:
