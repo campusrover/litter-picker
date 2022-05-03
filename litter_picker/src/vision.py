@@ -17,6 +17,7 @@ class Vision:
         self.box_sub = rospy.Subscriber(topics.BOUNDING_BOXES, BoundingBoxes,
                                         self.get_bonding_box_err_cb())
         self.trash_pub = rospy.Publisher(topics.TRASH_TOPIC, Trash)
+        self.depth_sub = rospy.Subscriber(topics.DEPTH_CAMERA, CompressedImage, self.get_depth_cb())
 
         self.image_wh = None
         self.bounding_box_err = None
@@ -55,9 +56,9 @@ class Vision:
 
         return cb
 
-    def _depth_cb(self):
+    def get_depth_cb(self):
 
-        def depth_cb(msg):
+        def cb(msg):
             if self.bounding_box_coord is None:
                 self.distance_to_box = None
             else:
@@ -67,7 +68,7 @@ class Vision:
                 distance = image[box_x][box_y]
                 self.distance_to_box = 0 if math.isnan(distance) else distance
 
-        return depth_cb
+        return cb
 
     def publish_data(self):
         msg = Trash()
