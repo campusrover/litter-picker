@@ -3,7 +3,7 @@ from task import Task, TaskStatus
 from litter_picker.msg import Trash
 
 
-class Rotation(Task):
+class Navigation(Task):
 
     def __init__(self, state: LitterPickerState):
         super().__init__(state)
