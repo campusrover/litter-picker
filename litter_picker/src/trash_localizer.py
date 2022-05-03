@@ -1,6 +1,7 @@
 import rospy
 from geometry_msgs.msg import PoseWithCovarianceStamped, Twist
 
+from utils import dist_between_two
 from rotation import RotationTask
 from master import LitterPickerState
 from task import Task
@@ -43,15 +44,18 @@ class TrashLocalizerTask(Task):
         return pose_cb
 
     def start(self):
-        rospy.loginfo("[Trash Localizer:] In the process of moving toward trash")
-        if self.has_box:
-            while not rospy.is_shutdown() and (self.dist_to_trash > self.closest_distance):
-                self.vel.angular.z = self.err_to_center / 3000
-                self.cmd_vel_pub.publish(self.vel)
-                rospy.loginfo("[Trash localizer:] current velocity = {}, and angular speed = {}".format(
-                    self.vel.angular.z, self.vel.linear.x))
-        else:
-            self.cmd_vel_pub.publish(self.stop)
+        dist_to_trash_local = self.dist_to_trash
+        original_x, original_y = self.current_pose.pose.position.x, self.current_pose.pose.position.y
+        dist_covered = 0
+        while not rospy.is_shutdown() and (dist_covered < dist_to_trash_local):
+            self.vel.angular.z = self.err_to_center / 3000
+            self.cmd_vel_pub.publish(self.vel)
+            dist_covered = dist_between_two(self.current_pose.pose.position.x, self.current_pose.pose.position.y,
+                                            original_x, original_y)
+            rospy.loginfo("[Trash localizer:] current velocity = {}, angular speed = {}, and dist_left = {}".format(
+                self.vel.angular.z, self.vel.linear.x, dist_to_trash_local - dist_covered))
+
+        self.cmd_vel_pub.publish(self.stop)
 
     def next(self):
         if self.has_box:
