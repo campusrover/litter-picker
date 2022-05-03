@@ -19,7 +19,8 @@ class TrashLocalizer(Task):
         self.vel = Twist()
         self.vel.linear.x = 0.2
         self.stop = Twist()
-        
+        self.original_x = self.current_pose.pose.position.x
+        self.original_y = self.current_pose.pose.position.y
     
     def _cb(self):
         def cb(msg):
@@ -36,13 +37,13 @@ class TrashLocalizer(Task):
         return pose_cb
 
     def start(self):
-        if self.has_box: 
-             while not rospy.is_shutdown() and (dist_to_trash > self.closest_distance):
-                self.vel.angular.z = self.err_to_center/3000
-                cmd_vel_pub.publish(self.vel) 
-            else: 
-                cmd_vel_pub.publish(self.stop)
-
+        dist_covered = 0
+        while not rospy.is_shutdown() and (dist_covered < self.self.dist_to_trash):
+            self.vel.angular.z = self.err_to_center/3000
+            cmd_vel_pub.publish(self.vel) 
+            dist_covered = dist_between_two(self.current_pose.pose.position.x, self.current_pose.pose.position.y, original_x, original_y)
+                
+        cmd_vel_pub.publish(self.stop)
 
     def next(self):
         if self.has_box: 
