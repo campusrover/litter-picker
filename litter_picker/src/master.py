@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from navigation import NavigationTask
 from utils import read_waypoints
 from task import Task
