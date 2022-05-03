@@ -1,5 +1,5 @@
 from master import LitterPickerState
-from task import Task, TaskStatus
+from task import Task
 from litter_picker.msg import Trash
 
 

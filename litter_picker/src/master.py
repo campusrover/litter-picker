@@ -1,5 +1,5 @@
 from utils import read_waypoints
-from task import Task, TaskStatus
+from task import Task
 import rospy
 
 
@@ -15,10 +15,8 @@ class LitterPicker:
         self.state = state
 
     def next(self):
-        if self.current_task.status() == TaskStatus.IDLE:
-            self.current_task.start()
-        elif self.current_task.status() == TaskStatus.DONE:
-            self.current_task = self.current_task.next()
+        self.current_task.start()
+        self.current_task = self.current_task.next()
 
 
 if __name__ == '__main__':
@@ -26,8 +24,4 @@ if __name__ == '__main__':
 
     litter_picker_state = LitterPickerState(read_waypoints(rospy.get_param('~waypoints_file')))
     litter_picker = LitterPicker(Task(litter_picker_state), litter_picker_state)
-    rate = rospy.Rate(10)
-
-    while not rospy.is_shutdown():
-        litter_picker.next()
-        rate.sleep()
+    litter_picker.next()

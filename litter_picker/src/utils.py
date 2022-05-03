@@ -4,7 +4,6 @@ from typing import Optional, List
 from darknet_ros_msgs.msg import BoundingBoxes, BoundingBox
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from litter_picker.msg import NavigationGoal
-from trash_classes import trash_classes
 import rospy
 
 
