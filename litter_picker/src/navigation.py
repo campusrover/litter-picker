@@ -22,13 +22,18 @@ class NavigationTask(Task):
         while not rospy.is_shutdown():
             waypoint: MoveBaseGoal = self.state.waypoints[self.state.current_waypoint_index]
 
+            rospy.loginfo("[Navigation Task] sending the litter picker to location {}, {}".format(
+                waypoint.target_pose.pose.position.x, waypoint.target_pose.pose.position.y
+            ))
             self.move_base_client.send_goal(waypoint)
             self.move_base_client.wait_for_result()
 
             if self.move_base_client.get_state() == GoalStatus.SUCCEEDED:
+                self.has_succeed = True
                 rospy.loginfo("[Navigation Task] has successfully reached location {}, {}".format(
                     waypoint.target_pose.pose.position.x, waypoint.target_pose.pose.position.y))
             else:
+                self.has_succeed = False
                 rospy.logwarn(
                     "[Navigation Task] has failed reached location {}, {}: try again".format(
                         waypoint.target_pose.pose.position.x, waypoint.target_pose.pose.position.y))

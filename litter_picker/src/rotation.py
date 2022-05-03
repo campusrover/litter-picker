@@ -30,6 +30,7 @@ class RotationTask(Task):
         return cb
 
     def start(self):
+        rospy.loginfo("[Rotation Task:] rotating to detect trash")
         starting_time = rospy.Time.now().to_sec()
         twist = Twist()
 
@@ -44,8 +45,8 @@ class RotationTask(Task):
 
     def next(self):
         if self.has_trash:
-            rospy.loginfo("Found trash ready to move toward it")
+            rospy.loginfo("[Rotation Task:] Found trash ready to move toward it")
             return TrashLocalizerTask(self.state)
         else:
-            rospy.loginfo("Did not find trash, will go to the next waypoint instead")
+            rospy.loginfo("[Rotation Task:] Did not find trash, will go to the next waypoint instead")
             return NavigationTask(self.state)

@@ -43,10 +43,13 @@ class TrashLocalizerTask(Task):
         return pose_cb
 
     def start(self):
+        rospy.loginfo("[Trash Localizer:] In the process of moving toward trash")
         if self.has_box:
             while not rospy.is_shutdown() and (self.dist_to_trash > self.closest_distance):
                 self.vel.angular.z = self.err_to_center / 3000
                 self.cmd_vel_pub.publish(self.vel)
+                rospy.loginfo("[Trash localizer:] current velocity = {}, and angular speed = {}".format(
+                    self.vel.angular.z, self.vel.linear.x))
         else:
             self.cmd_vel_pub.publish(self.stop)
 
