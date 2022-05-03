@@ -28,7 +28,7 @@ class RotationActionServer:
         self.image_sub = rospy.Subscriber(topics.IMAGE_TOPIC, CompressedImage, self.get_width_and_height_cb())
         self.image_wh = None
 
-        self.bonding_box_err = None
+        self.bonding_box_exists = None
         self.box_sub = rospy.Subscriber(topics.BOUNDING_BOXES, BoundingBoxes,
                                         self.get_bonding_box_err_cb())
         self.box = None
