@@ -44,6 +44,11 @@ class TrashLocalizerTask(Task):
 
     def start(self):
         dist_to_trash_local = self.dist_to_trash
+
+        while self.current_pose is None:
+            rospy.logwarn("[Trash localizer:] invalid amcl pose, waiting")
+            continue
+
         original_x, original_y = self.current_pose.pose.position.x, self.current_pose.pose.position.y
         dist_covered = 0
         while not rospy.is_shutdown() and (dist_covered < dist_to_trash_local):
