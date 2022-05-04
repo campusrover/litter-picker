@@ -68,7 +68,7 @@ class Vision:
                 bridge = CvBridge()
                 image = bridge.compressed_imgmsg_to_cv2(msg)
                 box_x, box_y = self.bounding_box_coord
-                distance = image[box_x][box_y]
+                distance = image[int(box_x)][int(box_y)]
                 self.distance_to_box = 0 if math.isnan(distance) else distance
 
         return cb
