@@ -12,6 +12,7 @@ class LitterPickerState:
 
 
 class LitterPicker:
+
     def __init__(self, task, state: LitterPickerState):
         self.current_task = task
         self.state = state

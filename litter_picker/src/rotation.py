@@ -48,5 +48,6 @@ class RotationTask(Task):
             rospy.loginfo("[Rotation Task:] Found trash ready to move toward it")
             return TrashLocalizerTask(self.state)
         else:
-            rospy.loginfo("[Rotation Task:] Did not find trash, will go to the next waypoint instead")
+            rospy.loginfo(
+                "[Rotation Task:] Did not find trash, will go to the next waypoint instead")
             return NavigationTask(self.state)
