@@ -77,7 +77,7 @@ class Vision:
                 if box_x >= self.depth_image.shape[0] or box_y >= self.depth_image.shape[1]:
                     rospy.logwarn("[Vision Node:] bounding box coordinate out of bound")
                     return None
-                dist_to_obj = self.depth_image[box_x][box_y]
+                dist_to_obj = self.depth_image[box_x][box_y]/1000
                 return dist_to_obj
             return None
 
