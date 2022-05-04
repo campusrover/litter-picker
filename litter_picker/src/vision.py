@@ -64,7 +64,7 @@ class Vision:
                 center = (self.box.xmin + self.box.xmax) / 2
                 image_center = w / 2
                 return center - image_center
-            return None
+            return -1
 
     def calculate_dist_to_obj(self):
         if self.depth_image is None:
@@ -76,10 +76,10 @@ class Vision:
 
                 if box_x >= self.depth_image.shape[0] or box_y >= self.depth_image.shape[1]:
                     rospy.logwarn("[Vision Node:] bounding box coordinate out of bound")
-                    return None
+                    return -1
                 dist_to_obj = self.depth_image[box_x][box_y]/1000
                 return dist_to_obj
-            return None
+            return -1
 
     def publish_data(self):
         msg = Trash()
