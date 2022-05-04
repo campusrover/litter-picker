@@ -26,7 +26,8 @@ class LitterPicker:
 
 if __name__ == '__main__':
     rospy.init_node("litter_picker")
-
     litter_picker_state = LitterPickerState(read_waypoints(rospy.get_param('~waypoints_file')))
     litter_picker = LitterPicker(NavigationTask(litter_picker_state), litter_picker_state)
-    litter_picker.execute()
+
+    while not rospy.is_shutdown():
+        litter_picker.execute()

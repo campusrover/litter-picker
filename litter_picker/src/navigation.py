@@ -4,13 +4,12 @@ from actionlib_msgs.msg import GoalStatus
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from rotation import RotationTask
 
-from master import LitterPickerState
 from task import Task
 
 
 class NavigationTask(Task):
 
-    def __init__(self, state: LitterPickerState):
+    def __init__(self, state):
         super().__init__(state)
         self.move_base_client = actionlib.SimpleActionClient(
             "move_base",
@@ -19,24 +18,23 @@ class NavigationTask(Task):
         self.has_succeed = False
 
     def start(self):
-        while not rospy.is_shutdown():
-            waypoint: MoveBaseGoal = self.state.waypoints[self.state.current_waypoint_index]
+        waypoint: MoveBaseGoal = self.state.waypoints[self.state.current_waypoint_index]
 
-            rospy.loginfo("[Navigation Task] sending the litter picker to location {}, {}".format(
-                waypoint.target_pose.pose.position.x, waypoint.target_pose.pose.position.y
-            ))
-            self.move_base_client.send_goal(waypoint)
-            self.move_base_client.wait_for_result()
+        rospy.loginfo("[Navigation Task] sending the litter picker to location {}, {}".format(
+            waypoint.target_pose.pose.position.x, waypoint.target_pose.pose.position.y
+        ))
+        self.move_base_client.send_goal(waypoint)
+        self.move_base_client.wait_for_result()
 
-            if self.move_base_client.get_state() == GoalStatus.SUCCEEDED:
-                self.has_succeed = True
-                rospy.loginfo("[Navigation Task] has successfully reached location {}, {}".format(
+        if self.move_base_client.get_state() == GoalStatus.SUCCEEDED:
+            self.has_succeed = True
+            rospy.loginfo("[Navigation Task] has successfully reached location {}, {}".format(
+                waypoint.target_pose.pose.position.x, waypoint.target_pose.pose.position.y))
+        else:
+            self.has_succeed = False
+            rospy.logwarn(
+                "[Navigation Task] has failed reached location {}, {}: try again".format(
                     waypoint.target_pose.pose.position.x, waypoint.target_pose.pose.position.y))
-            else:
-                self.has_succeed = False
-                rospy.logwarn(
-                    "[Navigation Task] has failed reached location {}, {}: try again".format(
-                        waypoint.target_pose.pose.position.x, waypoint.target_pose.pose.position.y))
 
     def next(self):
         if self.has_succeed:

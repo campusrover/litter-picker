@@ -4,18 +4,15 @@ import rospy
 from geometry_msgs.msg import Twist
 
 import topics
-from master import LitterPickerState
 from task import Task
 from litter_picker.msg import Trash
-from navigation import NavigationTask
-from trash_localizer import TrashLocalizerTask
 
 ROTATION_SPEED = 0.2
 
 
 class RotationTask(Task):
 
-    def __init__(self, state: LitterPickerState):
+    def __init__(self, state):
         super().__init__(state)
         self.cmd_vel_pub = rospy.Publisher(topics.CMD_VEL, Twist, queue_size=10)
         self.trash_sub = rospy.Subscriber(topics.TRASH_TOPIC, Trash, self.get_trash_cb())
@@ -44,6 +41,9 @@ class RotationTask(Task):
             self.cmd_vel_pub.publish(twist)
 
     def next(self):
+        from navigation import NavigationTask
+        from trash_localizer import TrashLocalizerTask
+
         if self.has_trash:
             rospy.loginfo("[Rotation Task:] Found trash ready to move toward it")
             return TrashLocalizerTask(self.state)

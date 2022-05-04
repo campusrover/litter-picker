@@ -2,7 +2,6 @@ import rospy
 from geometry_msgs.msg import PoseWithCovarianceStamped, Twist
 
 from utils import dist_between_two
-from rotation import RotationTask
 from master import LitterPickerState
 from task import Task
 from litter_picker.msg import Trash
@@ -58,6 +57,8 @@ class TrashLocalizerTask(Task):
         self.cmd_vel_pub.publish(self.stop)
 
     def next(self):
+        from rotation import RotationTask
+
         if self.has_box:
             return TrashLocalizerTask(self.state)
         else:
