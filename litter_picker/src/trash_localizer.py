@@ -43,23 +43,24 @@ class TrashLocalizerTask(Task):
         return pose_cb
 
     def start(self):
-        dist_to_trash_local = self.dist_to_trash
+        if self.dist_to_trash is not None and self.dist_to_trash > 0:
+            dist_to_trash_local = self.dist_to_trash
 
-        while self.current_pose is None:
-            rospy.logwarn("[Trash localizer:] invalid amcl pose, waiting")
-            continue
+            while self.current_pose is None:
+                rospy.logwarn("[Trash localizer:] invalid amcl pose, waiting")
+                continue
 
-        original_x, original_y = self.current_pose.pose.position.x, self.current_pose.pose.position.y
-        dist_covered = 0
-        while not rospy.is_shutdown() and (dist_covered < dist_to_trash_local):
-            self.vel.angular.z = self.err_to_center / 3000
-            self.cmd_vel_pub.publish(self.vel)
-            dist_covered = dist_between_two(self.current_pose.pose.position.x,
-                                            self.current_pose.pose.position.y, original_x,
-                                            original_y)
-            rospy.loginfo(
-                "[Trash localizer:] current velocity = {}, angular speed = {}, and dist_left = {}".
-                format(self.vel.angular.z, self.vel.linear.x, dist_to_trash_local - dist_covered))
+            original_x, original_y = self.current_pose.pose.position.x, self.current_pose.pose.position.y
+            dist_covered = 0
+            while not rospy.is_shutdown() and (dist_covered < dist_to_trash_local):
+                self.vel.angular.z = self.err_to_center / 3000
+                self.cmd_vel_pub.publish(self.vel)
+                dist_covered = dist_between_two(self.current_pose.pose.position.x,
+                                                self.current_pose.pose.position.y, original_x,
+                                                original_y)
+                rospy.loginfo(
+                    "[Trash localizer:] current velocity = {}, angular speed = {}, and dist_left = {}".
+                    format(self.vel.angular.z, self.vel.linear.x, dist_to_trash_local - dist_covered))
 
         self.cmd_vel_pub.publish(self.stop)
 
