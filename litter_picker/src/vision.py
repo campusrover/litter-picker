@@ -3,6 +3,7 @@
 import math
 
 import rospy
+import cv2
 from cv_bridge import CvBridge
 from darknet_ros_msgs.msg import BoundingBoxes
 from sensor_msgs.msg import CompressedImage

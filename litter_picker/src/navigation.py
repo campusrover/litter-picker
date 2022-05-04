@@ -2,7 +2,6 @@ import actionlib
 import rospy
 from actionlib_msgs.msg import GoalStatus
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-from rotation import RotationTask
 
 from task import Task
 
@@ -16,6 +15,7 @@ class NavigationTask(Task):
             MoveBaseAction,
         )
         self.has_succeed = False
+        self.move_base_client.wait_for_server()
 
     def start(self):
         waypoint: MoveBaseGoal = self.state.waypoints[self.state.current_waypoint_index]
@@ -37,6 +37,8 @@ class NavigationTask(Task):
                     waypoint.target_pose.pose.position.x, waypoint.target_pose.pose.position.y))
 
     def next(self):
+        from rotation import RotationTask
+
         if self.has_succeed:
             self.state.current_waypoint_index = (self.state.current_waypoint_index + 1) % len(
                 self.state.waypoints)

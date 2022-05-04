@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
-from navigation import NavigationTask
 from utils import read_waypoints
-from task import Task
 import rospy
 
 
@@ -14,8 +12,7 @@ class LitterPickerState:
 
 
 class LitterPicker:
-
-    def __init__(self, task: Task, state: LitterPickerState):
+    def __init__(self, task, state: LitterPickerState):
         self.current_task = task
         self.state = state
 
@@ -25,9 +22,14 @@ class LitterPicker:
 
 
 if __name__ == '__main__':
+    from navigation import NavigationTask
+
     rospy.init_node("litter_picker")
     litter_picker_state = LitterPickerState(read_waypoints(rospy.get_param('~waypoints_file')))
     litter_picker = LitterPicker(NavigationTask(litter_picker_state), litter_picker_state)
+    rate = rospy.Rate(10)
 
     while not rospy.is_shutdown():
+        print("now executing {}".format(litter_picker))
         litter_picker.execute()
+        rate.sleep()
