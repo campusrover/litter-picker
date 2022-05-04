@@ -84,8 +84,10 @@ class Vision:
     def publish_data(self):
         msg = Trash()
         msg.has_trash = self.box is not None
-        msg.err_to_center = self.calculate_obj_dist_to_center()
-        msg.dist_to_trash = self.calculate_dist_to_obj()
+        if msg.has_trash:
+            msg.err_to_center = self.calculate_obj_dist_to_center()
+            msg.dist_to_trash = self.calculate_dist_to_obj()
+        self.trash_pub.publish(msg)
 
 
 if __name__ == '__main__':
