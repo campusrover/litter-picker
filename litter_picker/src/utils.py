@@ -39,6 +39,8 @@ def read_collection_site() -> MoveBaseGoal:
     # hardcoded: need to change so that it reads from a file
 
     goal = MoveBaseGoal()
+
+    goal.target_pose.header.frame_id = 'map'
     goal.target_pose.pose.position.x = -7.9
     goal.target_pose.pose.position.y = 1.8
     goal.target_pose.pose.position.z = 0
