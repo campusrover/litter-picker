@@ -13,7 +13,7 @@
     </include>
 
     <node name="master" pkg="litter_picker" type="master.py" output="screen">
-        <param name="waypoints_file" type="string" value="$(find litter_picker)/waypoints/new_map_waypoints.txt"/>
+        <param name="waypoints_file" type="string" value="$(find litter_picker)/waypoints/new_map_waypoints.json"/>
     </node>
 
     <!-- <node name="navigation" pkg="litter_picker" type="navigation.py" output="screen"/> -->
