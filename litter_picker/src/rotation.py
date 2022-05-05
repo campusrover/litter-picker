@@ -18,6 +18,7 @@ class RotationTask(Task):
         self.trash_sub = rospy.Subscriber(topics.TRASH_TOPIC, Trash, self.get_trash_cb())
         self.timeout = (math.pi * 2) / ROTATION_SPEED
         self.has_trash = False
+        self.rate = rospy.Rate(10)
 
     def get_trash_cb(self):
 
@@ -33,12 +34,16 @@ class RotationTask(Task):
 
         while not rospy.is_shutdown() and (rospy.Time.now().to_sec() - starting_time
                                            ) < self.timeout and self.has_trash is False:
+            twist.linear.x = 0
             twist.angular.z = ROTATION_SPEED
             self.cmd_vel_pub.publish(twist)
+            self.rate.sleep()
 
         while not rospy.is_shutdown() and rospy.Time.now().to_sec() - starting_time < 3:
+            twist.linear.x = 0
             twist.angular.z = 0
             self.cmd_vel_pub.publish(twist)
+            self.rate.sleep()
 
     def next(self):
         from navigation import NavigationTask
