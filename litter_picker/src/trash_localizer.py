@@ -26,9 +26,9 @@ class TrashLocalizerTask(Task):
 
     def _trash_cb(self):
 
-        def cb(msg):
+        def cb(msg: Trash):
             self.has_box = msg.has_trash
-            self.dist_to_trash = msg.dist_to_trash
+            self.is_close_enough = msg.close_enough
             self.err_to_center = msg.err_to_center
 
         return cb
