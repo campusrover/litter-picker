@@ -24,7 +24,7 @@ class Vision:
         self.image = None
         self.box = None
         self.depth_image = None
-        self.last_box_timestamp = None
+        self.last_box_timestamp = 0
 
     ########################
     ## Callback Functions ##
