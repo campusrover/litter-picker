@@ -5,7 +5,7 @@ import math
 import rospy
 import cv2
 from cv_bridge import CvBridge
-from darknet_ros_msgs.msg import BoundingBoxes
+from darknet_ros_msgs.msg import BoundingBoxes, BoundingBox
 from sensor_msgs.msg import CompressedImage
 from litter_picker.msg import Trash
 
@@ -20,7 +20,6 @@ class Vision:
         self.box_sub = rospy.Subscriber(topics.BOUNDING_BOXES, BoundingBoxes,
                                         self.get_bounding_box_cb())
         self.trash_pub = rospy.Publisher(topics.TRASH_TOPIC, Trash)
-        self.depth_sub = rospy.Subscriber(topics.DEPTH_CAMERA, CompressedImage, self.get_depth_cb())
 
         self.image = None
         self.box = None
@@ -60,33 +59,22 @@ class Vision:
             rospy.logwarn("[Vision Node:] image has not be loaded yet")
         else:
             if self.box is not None:
-                _, w, _ = self.image.shape
+                h, w, _ = self.image.shape
                 center = (self.box.xmin + self.box.xmax) / 2
                 image_center = w / 2
-                return center - image_center
+                return center - image_center, self.is_close_enough_to_the_object(self.box, h)
             return -1
 
-    def calculate_dist_to_obj(self):
-        if self.depth_image is None:
-            rospy.logwarn("[Vision Node:] depth image has not been loaded yet")
-        else:
-            if self.box is not None:
-                box_x, box_y = int((self.box.xmin + self.box.xmin) / 2), int(
-                    (self.box.ymin + self.box.ymax) / 2)
-
-                if box_x >= self.depth_image.shape[0] or box_y >= self.depth_image.shape[1]:
-                    rospy.logwarn("[Vision Node:] bounding box coordinate out of bound")
-                    return -1
-                dist_to_obj = self.depth_image[box_x][box_y]/1000
-                return dist_to_obj
-            return -1
+    def is_close_enough_to_the_object(self, box: BoundingBox, image_height: int):
+        if self.box is None:
+            return False
+        return image_height - box.ymin < 30
 
     def publish_data(self):
         msg = Trash()
         msg.has_trash = self.box is not None
         if msg.has_trash:
-            msg.err_to_center = self.calculate_obj_dist_to_center()
-            msg.dist_to_trash = self.calculate_dist_to_obj()
+            msg.err_to_center, msg.close_enough = self.calculate_obj_dist_to_center()
         self.trash_pub.publish(msg)
 
 
