@@ -21,7 +21,7 @@ class TrashLocalizerTask(Task):
         self.stop = Twist()
         self.rate = rospy.Rate(10)
 
-        self.has_succeed = False
+        self.has_succeeded = False
 
     def _trash_cb(self):
 
@@ -45,7 +45,7 @@ class TrashLocalizerTask(Task):
         if self.has_box:
             rospy.loginfo("[Trash localizer:] move forward to trap the trash")
             self.trap_trash()
-            self.has_succeed = True
+            self.has_succeeded = True
         else:
             rospy.logwarn("[Trash localizer: bounding box has lost")
 
@@ -62,7 +62,7 @@ class TrashLocalizerTask(Task):
         from rotation import RotationTask
         from collection_site import MoveToCollectionSiteTask
 
-        if self.has_succeed:
+        if self.has_succeeded:
             return MoveToCollectionSiteTask(self.state)
         else:
             return RotationTask(self.state)
