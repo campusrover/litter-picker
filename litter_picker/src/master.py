@@ -10,6 +10,7 @@ class LitterPickerState:
         self.waypoints = waypoints
         self.current_waypoint_index = 0
         self.collection_site = read_collection_site()
+        self.number_of_trash_picked = 0
 
 
 class LitterPicker:
@@ -32,6 +33,5 @@ if __name__ == '__main__':
     rate = rospy.Rate(10)
 
     while not rospy.is_shutdown():
-        print("now executing {}".format(litter_picker))
         litter_picker.execute()
         rate.sleep()

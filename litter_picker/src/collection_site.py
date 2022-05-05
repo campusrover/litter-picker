@@ -57,6 +57,8 @@ class MoveToCollectionSiteTask(Task):
         from navigation import NavigationTask
 
         if self.has_succeeded:
+            # clear the trash
+            self.state.number_of_trash_picked = 0
             return NavigationTask(self.state)
         else:
             return MoveToCollectionSiteTask(self.state)

@@ -5,6 +5,8 @@ from task import Task
 from litter_picker.msg import Trash
 import topics
 
+MAXIMUM_TRASH_ALLOWED = 1
+
 
 class TrashLocalizerTask(Task):
 
@@ -63,6 +65,12 @@ class TrashLocalizerTask(Task):
         from collection_site import MoveToCollectionSiteTask
 
         if self.has_succeeded:
-            return MoveToCollectionSiteTask(self.state)
+            self.state.number_of_trash_picked += 1
+            rospy.loginfo("[Trash localizer:] currently picked {} pieces of trash".format(
+                self.state.number_of_trash_picked))
+
+            if self.state.number_of_trash_picked >= MAXIMUM_TRASH_ALLOWED:
+                return MoveToCollectionSiteTask(self.state)
+            return RotationTask(self.state)
         else:
             return RotationTask(self.state)
