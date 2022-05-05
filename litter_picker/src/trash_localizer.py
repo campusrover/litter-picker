@@ -21,6 +21,7 @@ class TrashLocalizerTask(Task):
         self.vel = Twist()
         self.vel.linear.x = 0.2
         self.stop = Twist()
+        self.rate = rospy.Rate(10)
 
         self.has_succeed = False
 
@@ -35,9 +36,10 @@ class TrashLocalizerTask(Task):
 
     def start(self):
         while not rospy.is_shutdown() and self.has_box and not self.is_close_enough:
-            self.vel.angular.z = self.err_to_center / 3000
+            self.vel.angular.z = -self.err_to_center / 3000
             self.cmd_vel_pub.publish(self.vel)
             rospy.loginfo("[Trash localizer:] current velocity = {}, angular speed = {}")
+            self.rate.sleep()
 
         self.cmd_vel_pub.publish(self.stop)
 
@@ -53,6 +55,8 @@ class TrashLocalizerTask(Task):
         while not rospy.is_shutdown() and rospy.Time.now().to_sec() - starting_time < 1:
             self.vel.angular.z = 0
             self.cmd_vel_pub.publish(self.vel)
+            self.rate.sleep()
+
         self.cmd_vel_pub.publish(self.stop)
 
     def next(self):
