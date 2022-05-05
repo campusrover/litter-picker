@@ -1,8 +1,10 @@
 import math
 from typing import Optional, List
 
+import actionlib
+from actionlib_msgs.msg import GoalStatus
 from darknet_ros_msgs.msg import BoundingBoxes, BoundingBox
-from move_base_msgs.msg import MoveBaseGoal
+from move_base_msgs.msg import MoveBaseGoal, MoveBaseAction
 from trash_class import trash_classes
 
 import rospy
@@ -49,5 +51,15 @@ def get_first_bonding_box(boxes: BoundingBoxes) -> Optional[BoundingBox]:
     return None
 
 
-def dist_between_two(x_now, y_now, x_origin, y_origin):
-    return math.sqrt((x_now - x_origin)**2 + (y_now - y_origin)**2)
+def navigate_to_waypoint(waypoint) -> bool:
+    move_base_client = actionlib.SimpleActionClient(
+        "move_base",
+        MoveBaseAction,
+    )
+
+    move_base_client.send_goal(waypoint)
+    move_base_client.wait_for_result()
+    if move_base_client.get_state() == GoalStatus.SUCCEEDED:
+        return True
+    else:
+        return False

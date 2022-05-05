@@ -1,7 +1,5 @@
 import rospy
-from geometry_msgs.msg import PoseWithCovarianceStamped, Twist
-
-from utils import dist_between_two
+from geometry_msgs.msg import Twist
 from master import LitterPickerState
 from task import Task
 from litter_picker.msg import Trash
