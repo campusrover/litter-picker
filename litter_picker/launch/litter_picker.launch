@@ -1,0 +1,21 @@
+<launch>
+    <include file="$(find litter_picker)/launch/navigation.launch">
+      <arg name="initial_pose_x" default="-1.1083"/>
+      <arg name="initial_pose_y" default="-1.6427"/>
+      <arg name="initial_pose_a" default="-0.6"/>
+      <arg name="map_file" default="$(find litter_picker)/maps/new_map.yaml"/>
+    </include>
+
+    <!-- <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_empty_world.launch"/> -->
+
+    <include file="$(find darknet_ros)/launch/darknet_ros.launch">
+         <arg name="image" value="/usb_cam/image_raw/compressed"/>
+    </include>
+
+    <node name="master" pkg="litter_picker" type="master.py" output="screen">
+        <param name="waypoints_file" type="string" value="$(find litter_picker)/waypoints/new_map_waypoints.txt"/>
+    </node>
+
+    <!-- <node name="navigation" pkg="litter_picker" type="navigation.py" output="screen"/> -->
+    <node name="vision" pkg="litter_picker" type="vision.py" output="screen"/>
+</launch>

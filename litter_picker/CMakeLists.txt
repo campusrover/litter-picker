@@ -11,17 +11,16 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 
-add_action_files(
+add_message_files(
     FILES
-    Navigation.action
-    Rotation.action
-    Trash.action
+    Trash.msg
 )
 
 generate_messages(
     DEPENDENCIES
     actionlib_msgs
     std_msgs
+
 )
 
 catkin_package(

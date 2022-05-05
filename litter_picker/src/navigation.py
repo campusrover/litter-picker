@@ -1,64 +1,46 @@
-#!/usr/bin/env python3
-import rospy
 import actionlib
-from actionlib import GoalStatus
+import rospy
+from actionlib_msgs.msg import GoalStatus
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 
-import actions
-from litter_picker.msg import NavigationAction, NavigationGoal, NavigationResult
+from task import Task
 
 
-class NavigationActionServer:
+class NavigationTask(Task):
 
-    def __init__(self, name):
-        self.server = actionlib.SimpleActionServer(name,
-                                                   NavigationAction,
-                                                   execute_cb=self.create_goal_cb,
-                                                   auto_start=False)
-        self.navigation_client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
-        self.navigation_client.wait_for_server()
-        self.server.start()
-        self.result = NavigationResult()
+    def __init__(self, state):
+        super().__init__(state)
+        self.move_base_client = actionlib.SimpleActionClient(
+            "move_base",
+            MoveBaseAction,
+        )
+        self.has_succeed = False
+        self.move_base_client.wait_for_server()
 
-    def create_goal_cb(self, goal: NavigationGoal):
-        goal_pose = MoveBaseGoal()
+    def start(self):
+        waypoint: MoveBaseGoal = self.state.waypoints[self.state.current_waypoint_index]
 
-        goal_pose.target_pose.header.frame_id = 'map'
-        goal_pose.target_pose.pose.position.x = goal.x
-        goal_pose.target_pose.pose.position.y = goal.y
-        goal_pose.target_pose.pose.position.z = goal.z
+        rospy.loginfo("[Navigation Task] sending the litter picker to location {}, {}".format(
+            waypoint.target_pose.pose.position.x, waypoint.target_pose.pose.position.y))
+        self.move_base_client.send_goal(waypoint)
+        self.move_base_client.wait_for_result()
 
-        # doesn't matter since, it's going to rotate for 360 degrees anyway
-        goal_pose.target_pose.pose.orientation.x = 0
-        goal_pose.target_pose.pose.orientation.y = 0
-        goal_pose.target_pose.pose.orientation.z = 0
-        goal_pose.target_pose.pose.orientation.w = 1
-
-        self.navigation_client.send_goal(goal_pose)
-        self.navigation_client.wait_for_result()
-
-        if self.navigation_client.get_state() == GoalStatus.SUCCEEDED:
-            self.result.msg = "[Navigation Node]: Reached location {}, {}".format(goal.x, goal.y)
-            self.server.set_succeeded(self.result)
+        if self.move_base_client.get_state() == GoalStatus.SUCCEEDED:
+            self.has_succeed = True
+            rospy.loginfo("[Navigation Task] has successfully reached location {}, {}".format(
+                waypoint.target_pose.pose.position.x, waypoint.target_pose.pose.position.y))
         else:
-            self.result.msg = "[Navigation Node]: Failed to reach location {}, {}".format(
-                goal.x, goal.y)
-            self.server.set_aborted(self.result)
+            self.has_succeed = False
+            rospy.logwarn("[Navigation Task] has failed reached location {}, {}: try again".format(
+                waypoint.target_pose.pose.position.x, waypoint.target_pose.pose.position.y))
 
-    def cancel_goal(self):
-        self.navigation_client.cancel_all_goals()
+    def next(self):
+        from rotation import RotationTask
 
-
-# Main program starts here
-if __name__ == '__main__':
-    rospy.init_node('navigation')
-    rospy.loginfo("Navigation Node is running")
-    nav = NavigationActionServer(actions.NAVIGATION_ACTION)
-
-    # make sure that the goal is cancelled when shut down occurs
-    rospy.on_shutdown(nav.cancel_goal)
-
-    rate = rospy.Rate(10)
-
-    while not rospy.is_shutdown():
-        rate.sleep()
+        if self.has_succeed:
+            self.state.current_waypoint_index = (self.state.current_waypoint_index + 1) % len(
+                self.state.waypoints)
+            # At this point we should create an instance of the RotationTask
+            return RotationTask(self.state)
+        else:
+            return NavigationTask(self.state)

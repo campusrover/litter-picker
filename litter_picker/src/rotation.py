@@ -1,110 +1,53 @@
-#!/usr/bin/env python3
 import math
 
-import actionlib
-import cv2
-from cv_bridge import CvBridge
-from darknet_ros_msgs.msg import BoundingBoxes, BoundingBox
-from sensor_msgs.msg import CompressedImage, Image
-
-import actions
 import rospy
 from geometry_msgs.msg import Twist
-from litter_picker.msg import RotationAction, RotationGoal, RotationResult
-from utils import get_first_bonding_box
+
 import topics
+from task import Task
+from litter_picker.msg import Trash
 
 ROTATION_SPEED = 0.2
 
 
-class RotationActionServer:
+class RotationTask(Task):
 
-    def __init__(self, name):
-        self.server = actionlib.SimpleActionServer(name,
-                                                   RotationAction,
-                                                   execute_cb=self.rotate,
-                                                   auto_start=False)
+    def __init__(self, state):
+        super().__init__(state)
         self.cmd_vel_pub = rospy.Publisher(topics.CMD_VEL, Twist, queue_size=10)
-        self.image_sub = rospy.Subscriber(topics.IMAGE_TOPIC, CompressedImage,
-                                          self.get_width_and_height_cb())
-        self.image_wh = None
-
-        self.bonding_box_err = None
-        self.box_sub = rospy.Subscriber(topics.BOUNDING_BOXES, BoundingBoxes,
-                                        self.get_bonding_box_err_cb())
-        self.box = None
-        self.result = RotationResult()
+        self.trash_sub = rospy.Subscriber(topics.TRASH_TOPIC, Trash, self.get_trash_cb())
         self.timeout = (math.pi * 2) / ROTATION_SPEED
-        self.box_id = None
+        self.has_trash = False
 
-        self.server.start()
+    def get_trash_cb(self):
 
-    def get_width_and_height_cb(self):
-
-        def cb(msg: CompressedImage):
-            # infer once during the lifetime of the object
-            if self.image_wh is None:
-                bridge = CvBridge()
-                image = bridge.compressed_imgmsg_to_cv2(msg)
-                self.image_wh = image.shape
+        def cb(msg: Trash):
+            self.has_trash = msg.has_trash
 
         return cb
 
-    def get_bonding_box_err_cb(self):
-
-        def cb(msg: BoundingBoxes):
-            if self.image_wh is None:
-                rospy.logwarn("unable to get the image's shape")
-            else:
-                _, w, _ = self.image_wh
-                box = get_first_bonding_box(msg.bounding_boxes)
-                if box is None:
-                    self.bonding_box_err = None
-                else:
-                    center = (box.xmin + box.xmax) / 2
-                    image_center = w / 2
-                    self.bonding_box_err = abs(image_center - center)
-                    self.box_id = box.id
-
-        return cb
-
-    def rotate(self, goal: RotationGoal):
+    def start(self):
+        rospy.loginfo("[Rotation Task:] rotating to detect trash")
         starting_time = rospy.Time.now().to_sec()
         twist = Twist()
 
-        while (rospy.Time.now().to_sec() - starting_time) < self.timeout and self.box_id is None:
+        while not rospy.is_shutdown() and (rospy.Time.now().to_sec() - starting_time
+                                           ) < self.timeout and self.has_trash is False:
             twist.angular.z = ROTATION_SPEED
             self.cmd_vel_pub.publish(twist)
 
-        while rospy.Time.now().to_sec() - starting_time < 3:
+        while not rospy.is_shutdown() and rospy.Time.now().to_sec() - starting_time < 3:
             twist.angular.z = 0
             self.cmd_vel_pub.publish(twist)
 
-        twist.angular.z = 0
-        self.cmd_vel_pub.publish(twist)
+    def next(self):
+        from navigation import NavigationTask
+        from trash_localizer import TrashLocalizerTask
 
-        if self.bonding_box_err is not None:
-            self.result.msg = "Trash found"
-            self.result.box_id = self.box_id
-            self.reset()
-            self.server.set_succeeded(self.result)
+        if self.has_trash:
+            rospy.loginfo("[Rotation Task:] Found trash ready to move toward it")
+            return TrashLocalizerTask(self.state)
         else:
-            self.result.msg = "No trash found"
-            self.reset()
-            self.server.set_aborted(self.result)
-
-    def reset(self):
-        self.bonding_box_err = None
-        self.box = None
-        self.box_id = None
-
-
-# Main program starts here
-if __name__ == '__main__':
-    rospy.init_node('rotation')
-    rospy.loginfo('Rotation Node is running')
-    rotation_node = RotationActionServer(actions.ROTATION_ACTION)
-    rate = rospy.Rate(10)
-
-    while not rospy.is_shutdown():
-        rate.sleep()
+            rospy.loginfo(
+                "[Rotation Task:] Did not find trash, will go to the next waypoint instead")
+            return NavigationTask(self.state)
