@@ -35,6 +35,7 @@ class TrashLocalizerTask(Task):
         return cb
 
     def start(self):
+        rospy.loginfo("[Trash localizer: ] ready to move toward the trash")
         while not rospy.is_shutdown() and self.has_box and not self.is_close_enough:
             self.vel.angular.z = -self.err_to_center / 3000
             self.cmd_vel_pub.publish(self.vel)
