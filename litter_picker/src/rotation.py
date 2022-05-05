@@ -39,11 +39,9 @@ class RotationTask(Task):
             self.cmd_vel_pub.publish(twist)
             self.rate.sleep()
 
-        while not rospy.is_shutdown() and rospy.Time.now().to_sec() - starting_time < 3:
-            twist.linear.x = 0
-            twist.angular.z = 0
-            self.cmd_vel_pub.publish(twist)
-            self.rate.sleep()
+        twist.linear.x = 0
+        twist.angular.z = 0
+        self.cmd_vel_pub.publish(twist)
 
     def next(self):
         from navigation import NavigationTask
