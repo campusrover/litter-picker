@@ -35,6 +35,22 @@ def read_waypoints(file_path: str) -> List[MoveBaseGoal]:
     return waypoints_list
 
 
+def read_collection_site() -> MoveBaseGoal:
+    # hardcoded: need to change so that it reads from a file
+
+    goal = MoveBaseGoal()
+    goal.target_pose.pose.position.x = -7.9
+    goal.target_pose.pose.position.y = 1.8
+    goal.target_pose.pose.position.z = 0
+
+    goal.target_pose.pose.orientation.x = 0
+    goal.target_pose.pose.orientation.y = 0
+    goal.target_pose.pose.orientation.z = -0.908
+    goal.target_pose.pose.orientation.w = 0.417
+
+    return goal
+
+
 def _process_waypoint(waypoint_str: str):
     x, y, z = waypoint_str.split(",")
     try:

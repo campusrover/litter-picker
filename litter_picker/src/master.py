@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from utils import read_waypoints
+from utils import read_waypoints, read_collection_site
 import rospy
 
 
@@ -9,6 +9,7 @@ class LitterPickerState:
     def __init__(self, waypoints):
         self.waypoints = waypoints
         self.current_waypoint_index = 0
+        self.collection_site = read_collection_site()
 
 
 class LitterPicker:

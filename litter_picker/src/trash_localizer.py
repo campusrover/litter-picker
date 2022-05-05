@@ -60,8 +60,9 @@ class TrashLocalizerTask(Task):
 
     def next(self):
         from rotation import RotationTask
+        from collection_site import MoveToCollectionSiteTask
 
         if self.has_succeed:
-            return TrashLocalizerTask(self.state)
+            return MoveToCollectionSiteTask(self.state)
         else:
             return RotationTask(self.state)
