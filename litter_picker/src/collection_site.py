@@ -43,7 +43,7 @@ class MoveToCollectionSiteTask(Task):
         starting_time = rospy.Time.now().to_sec()
         twist = Twist()
 
-        while not rospy.is_shutdown() and rospy.Time.now().to_sec() - starting_time < 1:
+        while not rospy.is_shutdown() and rospy.Time.now().to_sec() - starting_time < 2:
             twist.linear.x = -0.2
             twist.angular.z = 0
             self.cmd_vel_pub.publish(twist)
