@@ -68,7 +68,7 @@ class Vision:
     def is_close_enough_to_the_object(self, box: BoundingBox, image_height: int):
         if self.box is None:
             return False
-        return image_height - box.ymax < 30
+        return image_height - box.ymax < 60
 
     def publish_data(self):
         msg = Trash()
