@@ -13,7 +13,7 @@ class MoveToCollectionSiteTask(Task):
         super().__init__(state)
         self.cmd_vel_pub = rospy.Publisher(topics.CMD_VEL, Twist, queue_size=10)
         self.rate = rospy.Rate(10)
-        self.has_succeed = False
+        self.has_succeeded = False
 
     def start(self):
         collection_site: MoveBaseGoal = self.state.collection_site
@@ -28,14 +28,14 @@ class MoveToCollectionSiteTask(Task):
                 "[Collection Site Task:] has successfully reached the collection site: {}, {}".
                 format(collection_site.target_pose.pose.position.x,
                        collection_site.target_pose.pose.position.y))
-            self.has_succeed = True
+            self.has_succeeded = True
         else:
             rospy.logwarn(
                 "[Collection Site Task:] has failed reached the collection site: {}, {}: try again".
                 format(collection_site.target_pose.pose.position.x,
                        collection_site.target_pose.pose.position.y))
 
-        if self.has_succeed:
+        if self.has_succeeded:
             rospy.loginfo("[Collection Site Task:] now backing up")
             self.back_up()
 
@@ -56,7 +56,7 @@ class MoveToCollectionSiteTask(Task):
     def next(self):
         from navigation import NavigationTask
 
-        if self.has_succeed:
+        if self.has_succeeded:
             return NavigationTask(self.state)
         else:
             return MoveToCollectionSiteTask(self.state)
