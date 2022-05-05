@@ -24,6 +24,7 @@ class Vision:
         self.image = None
         self.box = None
         self.depth_image = None
+        self.last_box_timestamp = 0
 
     ########################
     ## Callback Functions ##
@@ -32,6 +33,7 @@ class Vision:
     def get_bounding_box_cb(self):
 
         def cb(msg: BoundingBoxes):
+            self.last_box_timestamp = rospy.Time.now().to_sec()
             self.box = get_first_bonding_box(msg.bounding_boxes)
 
         return cb
@@ -68,11 +70,14 @@ class Vision:
     def is_close_enough_to_the_object(self, box: BoundingBox, image_height: int):
         if self.box is None:
             return False
-        return image_height - box.ymin < 30
+        return image_height - box.ymax < 60
 
     def publish_data(self):
+        time_now = rospy.Time.now().to_sec()
         msg = Trash()
         msg.has_trash = self.box is not None
+        if time_now - self.last_box_timestamp > 0.5:
+            msg.has_trash = False
         if msg.has_trash:
             msg.err_to_center, msg.close_enough = self.calculate_obj_dist_to_center()
         self.trash_pub.publish(msg)
