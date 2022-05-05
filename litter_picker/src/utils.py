@@ -56,6 +56,7 @@ def navigate_to_waypoint(waypoint) -> bool:
         "move_base",
         MoveBaseAction,
     )
+    move_base_client.wait_for_server()
 
     move_base_client.send_goal(waypoint)
     move_base_client.wait_for_result()

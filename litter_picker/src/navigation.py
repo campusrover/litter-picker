@@ -10,12 +10,7 @@ class NavigationTask(Task):
 
     def __init__(self, state):
         super().__init__(state)
-        self.move_base_client = actionlib.SimpleActionClient(
-            "move_base",
-            MoveBaseAction,
-        )
         self.has_succeed = False
-        self.move_base_client.wait_for_server()
 
     def start(self):
         waypoint: MoveBaseGoal = self.state.waypoints[self.state.current_waypoint_index]
