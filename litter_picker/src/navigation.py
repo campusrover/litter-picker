@@ -19,6 +19,7 @@ class NavigationTask(Task):
             waypoint.target_pose.pose.position.x, waypoint.target_pose.pose.position.y))
 
         if navigate_to_waypoint(waypoint):
+            self.has_succeed = True
             rospy.loginfo("[Navigation Task] has successfully reached location {}, {}".format(
                 waypoint.target_pose.pose.position.x, waypoint.target_pose.pose.position.y))
         else:
