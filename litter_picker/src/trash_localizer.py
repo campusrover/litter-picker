@@ -53,7 +53,7 @@ class TrashLocalizerTask(Task):
 
     def trap_trash(self):
         starting_time = rospy.Time.now().to_sec()
-        while not rospy.is_shutdown() and rospy.Time.now().to_sec() - starting_time < 1:
+        while not rospy.is_shutdown() and rospy.Time.now().to_sec() - starting_time < 2:
             self.vel.angular.z = 0
             self.cmd_vel_pub.publish(self.vel)
             self.rate.sleep()
