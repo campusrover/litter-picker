@@ -76,7 +76,7 @@ class Vision:
         time_now = rospy.Time.now().to_sec()
         msg = Trash()
         msg.has_trash = self.box is not None
-        if (time_now - self.last_box_timestamp > 0.5):
+        if time_now - self.last_box_timestamp > 0.5:
             msg.has_trash = False
         if msg.has_trash:
             msg.err_to_center, msg.close_enough = self.calculate_obj_dist_to_center()
