@@ -1,7 +1,5 @@
 import rospy
 
-from master import LitterPickerState
-
 
 class Task:
     """
@@ -9,7 +7,8 @@ class Task:
     should implement the start() method, which begins the execution of the task, as well as the next()
     method which returns the next task to be executed give certain condition passed into self.state
     """
-    def __init__(self, state: LitterPickerState):
+
+    def __init__(self, state):
         """
         constructor fo the task
 
