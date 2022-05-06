@@ -26,7 +26,6 @@ class MoveToCollectionSiteTask(Task):
         """
         super().__init__(state)
         self.cmd_vel_pub = rospy.Publisher(topics.CMD_VEL, Twist, queue_size=10)
-        self.rate = rospy.Rate(10)
 
     def start(self):
         """

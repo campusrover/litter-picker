@@ -1,3 +1,5 @@
+import rospy
+
 from master import LitterPickerState
 
 
@@ -13,6 +15,7 @@ class Task:
         """
         self.state = state
         self.has_succeeded = False
+        self.rate = rospy.Rate(10)
 
     def start(self):
         """

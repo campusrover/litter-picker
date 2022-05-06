@@ -28,7 +28,6 @@ class RotationTask(Task):
         self.trash_sub = rospy.Subscriber(topics.TRASH_TOPIC, Trash, self.get_trash_cb())
         self.timeout = (math.pi * 2) / ROTATION_SPEED
         self.has_trash = False
-        self.rate = rospy.Rate(10)
 
     def get_trash_cb(self):
         """

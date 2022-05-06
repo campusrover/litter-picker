@@ -45,7 +45,6 @@ class TrashLocalizerTask(Task):
 
         # twist message for stopping the robot
         self.stop = Twist()
-        self.rate = rospy.Rate(10)
 
     def _trash_cb(self):
         """
