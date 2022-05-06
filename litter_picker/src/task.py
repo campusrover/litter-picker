@@ -1,4 +1,3 @@
-from enum import Enum
 from master import LitterPickerState
 
 
@@ -13,6 +12,7 @@ class Task:
         correctly at the current moment.
         """
         self.state = state
+        self.has_succeeded = False
 
     def start(self):
         """
