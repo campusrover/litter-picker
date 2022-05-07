@@ -69,7 +69,7 @@ class TrashLocalizerTask(Task):
         """
         rospy.loginfo("[Trash localizer: ] ready to move toward the trash")
         while not rospy.is_shutdown() and self.has_box and not self.is_close_enough:
-            self.vel.angular.z = -self.err_to_center / 2500
+            self.vel.angular.z = -self.err_to_center / 1500
             self.cmd_vel_pub.publish(self.vel)
             rospy.loginfo("[Trash localizer:] current velocity = {}, angular speed = {}".format(
                 self.vel.linear.x, self.vel.angular.z))
@@ -88,6 +88,7 @@ class TrashLocalizerTask(Task):
         """
         Move forward a bit to trap the trash
         """
+        # perhaps also check if the bounding box is in the center before doing the trap
         starting_time = rospy.Time.now().to_sec()
         while not rospy.is_shutdown(
         ) and rospy.Time.now().to_sec() - starting_time < NUMBER_OF_SECONDS_TO_TRAP:
