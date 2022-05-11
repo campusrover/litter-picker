@@ -95,13 +95,13 @@ class TrashLocalizerTask(Task):
                 self.vel.linear.x, self.vel.angular.z))
             self.rate.sleep()
 
-        rospy.loginfo("[Trash localizer: ] after the while loop: safe to go forward  = {}".format(
-            self.safe_to_go_forward))
         self.cmd_vel_pub.publish(self.stop)
 
         if not self.safe_to_go_forward:
             rospy.logwarn("[Trash Localizer:] obstacle ahead")
         elif self.has_box and self.safe_to_go_forward:
+            rospy.loginfo("[Trash localizer: ] safe to go forward  = {}".format(
+                self.safe_to_go_forward))
             rospy.loginfo("[Trash localizer:] move forward to trap the trash")
             self.trap_trash()
         else:

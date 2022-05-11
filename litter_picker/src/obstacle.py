@@ -13,7 +13,7 @@ class ObstacleNode:
         self.obstacle_pub = rospy.Publisher(topics.OBSTACLE, Obstacle, queue_size=2)
         self.front = []
         self.back = []
-        self.front_distance = 0.7
+        self.front_distance = 0.5
         self.back_distance = 0.4
 
     def _scan_cb(self):
