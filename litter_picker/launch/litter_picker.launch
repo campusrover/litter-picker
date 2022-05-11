@@ -18,4 +18,5 @@
 
     <!-- <node name="navigation" pkg="litter_picker" type="navigation.py" output="screen"/> -->
     <node name="vision" pkg="litter_picker" type="vision.py" output="screen"/>
+    <node name="obstacle" pkg="litter_picker" type="obstacle.py" output="screen"/>
 </launch>

@@ -40,7 +40,7 @@ class Vision:
         self.image_sub = rospy.Subscriber(topics.IMAGE_TOPIC, CompressedImage, self.get_image_cb())
         self.box_sub = rospy.Subscriber(topics.BOUNDING_BOXES, BoundingBoxes,
                                         self.get_bounding_box_cb())
-        self.trash_pub = rospy.Publisher(topics.TRASH_TOPIC, Trash)
+        self.trash_pub = rospy.Publisher(topics.TRASH_TOPIC, Trash, queue_size=10)
 
         # image from the camera
         self.image = None

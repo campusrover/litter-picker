@@ -15,3 +15,5 @@ STATE_TOPIC = 'master/state'
 
 # contains message that has information about the bounding box (of type Trash)
 TRASH_TOPIC = 'litter_picker/vision'
+OBSTACLE = "litter_picker/obstacle"
+SCAN = "/scan"

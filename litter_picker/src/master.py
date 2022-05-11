@@ -62,7 +62,7 @@ class LitterPicker:
 
 if __name__ == '__main__':
     from navigation import NavigationTask
-
+    from rotation import RotationTask
     rospy.init_node("litter_picker")
 
     # read the coordinates of the set of waypoints and collection set from the json config file
