@@ -135,3 +135,26 @@ def navigate_to_waypoint(waypoint: MoveBaseGoal) -> bool:
         return True
     else:
         return False
+
+
+def get_state_from_task(task) -> int:
+    from navigation import NavigationTask
+    from rotation import RotationTask
+    from trash_localizer import TrashLocalizerTask
+    from collection_site import MoveToCollectionSiteTask
+
+    from gui import GO_TO_COLLECTION_SITE
+    from gui import GO_TO_WAYPOINT
+    from gui import PICK_UP_TRASH
+    from gui import ROTATION
+
+    if isinstance(task, NavigationTask):
+        return GO_TO_WAYPOINT
+    elif isinstance(task, RotationTask):
+        return ROTATION
+    elif isinstance(task, TrashLocalizerTask):
+        return PICK_UP_TRASH
+    elif isinstance(task, MoveToCollectionSiteTask):
+        return GO_TO_COLLECTION_SITE
+
+    raise ValueError("task not registered")

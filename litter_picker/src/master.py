@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
-from utils import read_waypoints, read_collection_site, read_config
+from utils import read_waypoints, read_collection_site, read_config, get_state_from_task
 from task import Task
+from topics import STATE_TOPIC
 import rospy
+from std_msgs.msg import Int32
 
 
 class LitterPickerState:
@@ -50,12 +52,14 @@ class LitterPicker:
         :param task: the first task that the LitterPicker will execute
         """
         self.current_task = task
+        self.state_pub = rospy.Publisher(STATE_TOPIC, Int32)
 
     def execute(self):
         """
         Execute the task that is needed to be run now. After the task has been finished executed, fetch
         the next task that is needed to be executed.
         """
+        self.state_pub.publish(Int32(get_state_from_task(self.current_task)))
         self.current_task.start()
         self.current_task = self.current_task.next()
 
