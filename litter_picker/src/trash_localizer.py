@@ -89,7 +89,7 @@ class TrashLocalizerTask(Task):
             self.trap_trash()
             self.has_succeeded = True
         else:
-            rospy.logwarn("[Trash localizer: bounding box has lost")
+            rospy.logwarn("[Trash localizer:] bounding box has lost, retrying")
             self.state.number_of_times_bounding_box_lost += 1
 
     def trap_trash(self):
@@ -132,5 +132,8 @@ class TrashLocalizerTask(Task):
             if self.state.number_of_times_bounding_box_lost <= MAX_RETRY_LOST_BOUNDING_BOXES:
                 return RotationTask(self.state)
             else:
+                rospy.logwarn(
+                    "[Trash localization:] failed to discover trash after {} retries, go to navigation state instead"
+                    .format(MAX_RETRY_LOST_BOUNDING_BOXES))
                 self.state.number_of_times_bounding_box_lost = 0
                 return NavigationTask(self.state)
