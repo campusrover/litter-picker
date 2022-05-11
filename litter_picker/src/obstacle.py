@@ -5,16 +5,19 @@ from sensor_msgs.msg import LaserScan
 from litter_picker.msg import Obstacle
 import topics
 
+
 class ObstacleNode:
+
     def __init__(self):
         self.scan_sub = rospy.Subscriber(topics.SCAN, LaserScan, self._scan_cb())
         self.obstacle_pub = rospy.Publisher(topics.OBSTACLE, Obstacle, queue_size=2)
         self.front = []
         self.back = []
-        self.front_distance =  0.7
+        self.front_distance = 0.7
         self.back_distance = 0.4
 
     def _scan_cb(self):
+
         def cb(msg):
             front_raw = msg.ranges[-30:-1] + msg.ranges[0:30]
             back_raw = msg.ranges[90:130]
@@ -52,6 +55,3 @@ if __name__ == '__main__':
     while not rospy.is_shutdown():
         obstacle_node.publisher()
         rate.sleep()
-
-
-
