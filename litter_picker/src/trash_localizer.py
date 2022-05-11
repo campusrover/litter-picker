@@ -1,8 +1,9 @@
 import rospy
 from geometry_msgs.msg import Twist
+
 from master import LitterPickerState
 from task import Task
-from litter_picker.msg import Trash
+from litter_picker.msg import Trash, Obstacle
 import topics
 
 # the number of seconds to move the litter picker forward to trap the trash
@@ -32,6 +33,7 @@ class TrashLocalizerTask(Task):
         """
         super().__init__(state)
         self.sub = rospy.Subscriber(topics.TRASH_TOPIC, Trash, self._trash_cb())
+        self.obstacle_sub = rospy.Subscriber(topics.OBSTACLE, Obstacle, self._obstacle_sub())
         self.cmd_vel_pub = rospy.Publisher(topics.CMD_VEL, Twist, queue_size=10)
 
         # whether there is a bounding box/trash nearby
@@ -46,6 +48,10 @@ class TrashLocalizerTask(Task):
         # twist message for moving the litter picker toward the trash
         self.vel = Twist()
         self.vel.linear.x = APPROACH_TRASH_VELOCITY
+
+        self.stop = Twist()
+        self.rate = rospy.Rate(10)
+        self.safe_to_go_forward = True
 
         # twist message for stopping the robot
         self.stop = Twist()
@@ -66,6 +72,13 @@ class TrashLocalizerTask(Task):
 
         return cb
 
+    def _obstacle_sub(self):
+
+        def cb(msg: Obstacle):
+            self.safe_to_go_forward = msg.safe_to_go_forward
+
+        return cb
+
     def start(self):
         """
         Start execute the task. It first tries to move toward the trash and adjusting itself
@@ -73,8 +86,8 @@ class TrashLocalizerTask(Task):
         it will try to move forward a bit to trap the trash
         """
         rospy.loginfo("[Trash localizer: ] ready to move toward the trash")
-        while not rospy.is_shutdown() and self.has_box and (
-                not self.is_close_enough or abs(self.err_to_center) > ERR_TO_CENTER_TOLERANCE):
+        while not rospy.is_shutdown() and self.has_box and (not self.is_close_enough or abs(
+                self.err_to_center) > ERR_TO_CENTER_TOLERANCE) and self.safe_to_go_forward:
             self.vel.linear.x = 0 if self.is_close_enough else APPROACH_TRASH_VELOCITY
             self.vel.angular.z = -self.err_to_center / 1500
             self.cmd_vel_pub.publish(self.vel)
@@ -84,10 +97,13 @@ class TrashLocalizerTask(Task):
 
         self.cmd_vel_pub.publish(self.stop)
 
-        if self.has_box:
+        if not self.safe_to_go_forward:
+            rospy.logwarn("[Trash Localizer:] obstacle ahead")
+        elif self.has_box and self.safe_to_go_forward:
+            rospy.loginfo("[Trash localizer: ] safe to go forward  = {}".format(
+                self.safe_to_go_forward))
             rospy.loginfo("[Trash localizer:] move forward to trap the trash")
             self.trap_trash()
-            self.has_succeeded = True
         else:
             rospy.logwarn("[Trash localizer:] bounding box has lost, retrying")
             self.state.number_of_times_bounding_box_lost += 1
@@ -98,14 +114,20 @@ class TrashLocalizerTask(Task):
         """
         # perhaps also check if the bounding box is in the center before doing the trap
         starting_time = rospy.Time.now().to_sec()
-        while not rospy.is_shutdown(
-        ) and rospy.Time.now().to_sec() - starting_time < NUMBER_OF_SECONDS_TO_TRAP:
+
+        while not rospy.is_shutdown() and rospy.Time.now().to_sec(
+        ) - starting_time < NUMBER_OF_SECONDS_TO_TRAP and self.safe_to_go_forward:
             self.vel.linear.x = TRAP_VELOCITY
             self.vel.angular.z = 0
             self.cmd_vel_pub.publish(self.vel)
             self.rate.sleep()
 
         self.cmd_vel_pub.publish(self.stop)
+
+        if not self.safe_to_go_forward:
+            rospy.logwarn("[Trash Localizer:] obstacle ahead")
+        else:
+            self.has_succeeded = True
 
     def next(self):
         """
@@ -128,6 +150,11 @@ class TrashLocalizerTask(Task):
             if self.state.number_of_trash_picked >= MAXIMUM_TRASH_ALLOWED:
                 return MoveToCollectionSiteTask(self.state)
             return RotationTask(self.state)
+        elif not self.safe_to_go_forward:
+            rospy.loginfo(
+                "[Trash Localizer:] there is an obstacle near the trash -> going to the next waypoint"
+            )
+            return NavigationTask(self.state)
         else:
             if self.state.number_of_times_bounding_box_lost <= MAX_RETRY_LOST_BOUNDING_BOXES:
                 return RotationTask(self.state)
