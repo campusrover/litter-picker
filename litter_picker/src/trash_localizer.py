@@ -9,7 +9,7 @@ import topics
 APPROACH_TRASH_VELOCITY = 0.2
 ERR_TO_CENTER_TOLERANCE = 60
 TRAP_VELOCITY = 0.2
-MAX_RETRY_LOST_BOUNDING_BOXES = 3
+MAX_RETRY_LOST_BOUNDING_BOXES = 5
 NUMBER_OF_SECONDS_TO_TRAP = 2
 
 # the maximum amount of trash allowed before moving to the collection site
