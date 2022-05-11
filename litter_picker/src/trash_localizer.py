@@ -6,6 +6,7 @@ from litter_picker.msg import Trash
 import topics
 
 # the number of seconds to move the litter picker forward to trap the trash
+MAX_RETRY_LOST_BOUNDING_BOXES = 3
 NUMBER_OF_SECONDS_TO_TRAP = 2
 
 # the maximum amount of trash allowed before moving to the collection site
@@ -83,6 +84,7 @@ class TrashLocalizerTask(Task):
             self.has_succeeded = True
         else:
             rospy.logwarn("[Trash localizer: bounding box has lost")
+            self.state.number_of_times_bounding_box_lost += 1
 
     def trap_trash(self):
         """
@@ -109,6 +111,7 @@ class TrashLocalizerTask(Task):
         """
         from rotation import RotationTask
         from collection_site import MoveToCollectionSiteTask
+        from navigation import NavigationTask
 
         if self.has_succeeded:
             self.state.number_of_trash_picked += 1
@@ -119,4 +122,8 @@ class TrashLocalizerTask(Task):
                 return MoveToCollectionSiteTask(self.state)
             return RotationTask(self.state)
         else:
-            return RotationTask(self.state)
+            if self.state.number_of_times_bounding_box_lost <= MAX_RETRY_LOST_BOUNDING_BOXES:
+                return RotationTask(self.state)
+            else:
+                self.state.number_of_times_bounding_box_lost = 0
+                return NavigationTask(self.state)

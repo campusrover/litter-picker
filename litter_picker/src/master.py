@@ -33,6 +33,9 @@ class LitterPickerState:
         # the number of trash that the litter picker has picked up
         self.number_of_trash_picked = 0
 
+        # the number of time that the bounding boxes has lost during the trash localization state
+        self.number_of_times_bounding_box_lost = 0
+
 
 class LitterPicker:
     """
