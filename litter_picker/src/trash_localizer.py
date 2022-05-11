@@ -6,6 +6,10 @@ from litter_picker.msg import Trash
 import topics
 
 # the number of seconds to move the litter picker forward to trap the trash
+APPROACH_TRASH_VELOCITY = 0.2
+ERR_TO_CENTER_TOLERANCE = 60
+TRAP_VELOCITY = 0.2
+MAX_RETRY_LOST_BOUNDING_BOXES = 20
 NUMBER_OF_SECONDS_TO_TRAP = 2
 
 # the maximum amount of trash allowed before moving to the collection site
@@ -41,10 +45,11 @@ class TrashLocalizerTask(Task):
 
         # twist message for moving the litter picker toward the trash
         self.vel = Twist()
-        self.vel.linear.x = 0.2
+        self.vel.linear.x = APPROACH_TRASH_VELOCITY
 
         # twist message for stopping the robot
         self.stop = Twist()
+        self.stop.linear.x = 0
 
     def _trash_cb(self):
         """
@@ -68,7 +73,9 @@ class TrashLocalizerTask(Task):
         it will try to move forward a bit to trap the trash
         """
         rospy.loginfo("[Trash localizer: ] ready to move toward the trash")
-        while not rospy.is_shutdown() and self.has_box and not self.is_close_enough:
+        while not rospy.is_shutdown() and self.has_box and (
+                not self.is_close_enough or abs(self.err_to_center) > ERR_TO_CENTER_TOLERANCE):
+            self.vel.linear.x = 0 if self.is_close_enough else APPROACH_TRASH_VELOCITY
             self.vel.angular.z = -self.err_to_center / 1500
             self.cmd_vel_pub.publish(self.vel)
             rospy.loginfo("[Trash localizer:] current velocity = {}, angular speed = {}".format(
@@ -82,7 +89,8 @@ class TrashLocalizerTask(Task):
             self.trap_trash()
             self.has_succeeded = True
         else:
-            rospy.logwarn("[Trash localizer: bounding box has lost")
+            rospy.logwarn("[Trash localizer:] bounding box has lost, retrying")
+            self.state.number_of_times_bounding_box_lost += 1
 
     def trap_trash(self):
         """
@@ -92,6 +100,7 @@ class TrashLocalizerTask(Task):
         starting_time = rospy.Time.now().to_sec()
         while not rospy.is_shutdown(
         ) and rospy.Time.now().to_sec() - starting_time < NUMBER_OF_SECONDS_TO_TRAP:
+            self.vel.linear.x = TRAP_VELOCITY
             self.vel.angular.z = 0
             self.cmd_vel_pub.publish(self.vel)
             self.rate.sleep()
@@ -109,6 +118,7 @@ class TrashLocalizerTask(Task):
         """
         from rotation import RotationTask
         from collection_site import MoveToCollectionSiteTask
+        from navigation import NavigationTask
 
         if self.has_succeeded:
             self.state.number_of_trash_picked += 1
@@ -119,4 +129,11 @@ class TrashLocalizerTask(Task):
                 return MoveToCollectionSiteTask(self.state)
             return RotationTask(self.state)
         else:
-            return RotationTask(self.state)
+            if self.state.number_of_times_bounding_box_lost <= MAX_RETRY_LOST_BOUNDING_BOXES:
+                return RotationTask(self.state)
+            else:
+                rospy.logwarn(
+                    "[Trash localization:] failed to discover trash after {} retries, go to navigation state instead"
+                    .format(MAX_RETRY_LOST_BOUNDING_BOXES))
+                self.state.number_of_times_bounding_box_lost = 0
+                return NavigationTask(self.state)

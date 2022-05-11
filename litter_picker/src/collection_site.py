@@ -6,7 +6,7 @@ import topics
 from task import Task
 from utils import navigate_to_waypoint
 
-NUMBER_OF_SECONDS_TO_BACKUP = 2
+NUMBER_OF_SECONDS_TO_BACKUP = 2.5
 
 BACK_UP_SPEED = -0.2
 
