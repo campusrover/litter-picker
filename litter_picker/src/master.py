@@ -52,7 +52,7 @@ class LitterPicker:
         :param task: the first task that the LitterPicker will execute
         """
         self.current_task = task
-        self.state_pub = rospy.Publisher(STATE_TOPIC, Int32)
+        self.state_pub = rospy.Publisher(STATE_TOPIC, Int32, queue_size=1)
 
     def execute(self):
         """
