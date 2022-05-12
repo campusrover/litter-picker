@@ -3,6 +3,7 @@ Contains utility functions shared by all the other nodes/modules
 """
 
 import json
+import os.path
 from typing import Optional, List
 
 import actionlib
@@ -135,6 +136,17 @@ def navigate_to_waypoint(waypoint: MoveBaseGoal) -> bool:
         return True
     else:
         return False
+
+
+def get_gif_path(gif_name: str) -> str:
+    folder_path = os.path.split(os.path.abspath(__file__))[0]
+    folder_path = os.path.split(folder_path)[0]
+
+    f_path = os.path.join(folder_path, "gifs", gif_name)
+
+    if os.path.exists(f_path):
+        return f_path
+    raise ValueError("path does not exists")
 
 
 def get_state_from_task(task) -> int:
